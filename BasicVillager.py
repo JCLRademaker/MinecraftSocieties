@@ -35,61 +35,31 @@ else:
     import functools
     print = functools.partial(print, flush=True)
 
-def Menger(xorg, yorg, zorg, size, blocktype, variant, holetype):
-    #draw solid chunk
-    genstring = GenCuboidWithVariant(xorg,yorg,zorg,xorg+size-1,yorg+size-1,zorg+size-1,blocktype,variant) + "\n"
-    #now remove holes
-    unit = size
-    while (unit >= 3):
-        w=old_div(unit,3)
-        for i in range(0, size, unit):
-            for j in range(0, size, unit):
-                x=xorg+i
-                y=yorg+j
-                genstring += GenCuboid(x+w,y+w,zorg,(x+2*w)-1,(y+2*w)-1,zorg+size-1,holetype) + "\n"
-                y=yorg+i
-                z=zorg+j
-                genstring += GenCuboid(xorg,y+w,z+w,xorg+size-1, (y+2*w)-1,(z+2*w)-1,holetype) + "\n"
-                genstring += GenCuboid(x+w,yorg,z+w,(x+2*w)-1,yorg+size-1,(z+2*w)-1,holetype) + "\n"
-        unit = w
-    return genstring
 
-def GenCuboid(x1, y1, z1, x2, y2, z2, blocktype):
-    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '"/>'
-
-def GenCuboidWithVariant(x1, y1, z1, x2, y2, z2, blocktype, variant):
-    return '<DrawCuboid x1="' + str(x1) + '" y1="' + str(y1) + '" z1="' + str(z1) + '" x2="' + str(x2) + '" y2="' + str(y2) + '" z2="' + str(z2) + '" type="' + blocktype + '" variant="' + variant + '"/>'
-    
 missionXML='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <About><Summary>Hello world!</Summary></About>
             
 	    <ServerSection>
-              <ServerInitialConditions>
-                	<Time>
-                	    <StartTime>1000</StartTime>
-                	    <AllowPassageOfTime>false</AllowPassageOfTime>
-                	</Time>
-                	<Weather>clear</Weather>
-              </ServerInitialConditions>
-              <ServerHandlers>
-                  <FlatWorldGenerator generatorString="3;7,44*49,73,35:1,159:4,95:13,35:13,159:11,95:10,159:14,159:6,35:6,95:6;12;"/>
-                  <DrawingDecorator>
-                    <DrawSphere x="-27" y="70" z="0" radius="30" type="air"/>''' + Menger(-40, 40, -13, 27, "stone", "smooth_granite", "air") + '''
-                    <DrawCuboid x1="-25" y1="39" z1="-2" x2="-29" y2="39" z2="2" type="lava"/>
-                    <DrawCuboid x1="-26" y1="39" z1="-1" x2="-28" y2="39" z2="1" type="obsidian"/>
-                    <DrawBlock x="-27" y="39" z="0" type="diamond_block"/>
-                  </DrawingDecorator>
-                  <ServerQuitFromTimeUp timeLimitMs="30000"/>
-                  <ServerQuitWhenAnyAgentFinishes/>
-                </ServerHandlers>
+              	 <ServerInitialConditions>
+					<Time>
+						<StartTime>1000</StartTime>
+						<AllowPassageOfTime>false</AllowPassageOfTime>
+					</Time>
+		 </ServerInitialConditions>
+
+               	 <ServerHandlers>
+		   	<DefaultWorldGenerator/>
+                  	<ServerQuitFromTimeUp timeLimitMs="0"/>
+                  	<ServerQuitWhenAnyAgentFinishes/>
+                 </ServerHandlers>
               </ServerSection>
 
  <!--****************AGENT ZONE ********************-->
               <AgentSection mode="Survival">
                 <Name>BasicVillager</Name>
                 <AgentStart>
-                    <Placement x="0.5" y="56.0" z="0.5" yaw="90"/>
+                  <!--  <Placement x="0" y="0" z="90" yaw="90"/>  -->
                    
 	  <!--COMMENT we can add tools but axe, shovel and others didn't work for some reason-->
 		    <Inventory>
@@ -107,7 +77,10 @@ missionXML='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
                         <max x="1" y="-1" z="1"/>
                       </Grid>
                   </ObservationFromGrid>
-                  <ContinuousMovementCommands turnSpeedDegs="180"/>
+
+		 <DiscreteMovementCommands />
+                  <!--  <ContinuousMovementCommands turnSpeedDegs="180"/> -->
+
                   <InventoryCommands/>
 
 	 <!--COMMENT apparently this is how we conclude the mission-->
@@ -134,7 +107,10 @@ if agent_host.receivedArgument("help"):
     exit(0)
 
 my_mission = MalmoPython.MissionSpec(missionXML, True)
+# my_mission.setWorldSeed("1488218954")
+my_mission.setWorldSeed("-770290065")
 my_mission_record = MalmoPython.MissionRecordSpec()
+
 
 # Attempt to start a mission:
 max_retries = 3
@@ -164,6 +140,13 @@ print("Mission running ", end=' ')
 
 #************************ AGENT COMMANDS *****************************
 
+
+#agent_host.sendCommand("hotbar.9 1") #Press the hotbar key
+
+#agent_host.sendCommand("look 1") 
+
+agent_host.sendCommand("move ")
+
 #agent_host.sendCommand("hotbar.9 1") #Press the hotbar key
 #agent_host.sendCommand("hotbar.9 0") #Release hotbar key - agent should now be holding diamond_pickaxe
 #agent_host.sendCommand("pitch 0.2") #Start looking downward slowly
@@ -172,15 +155,20 @@ print("Mission running ", end=' ')
 #agent_host.sendCommand("move 1")     #And start running...
 #agent_host.sendCommand("attack 1")   #Whilst flailing our pickaxe!
 
-ok = 0
-agent_host.sendCommand("hotbar.9 1") #Press the hotbar key
-agent_host.sendCommand("strafe 1")
-agent_host.sendCommand("strafe 1 0")
-while ok<100:
-	agent_host.sendCommand("move 1")     #And start running...
-	time.sleep(1) 
-	agent_host.sendCommand("attack 1")
-	ok = ok+1
+
+
+#ok = 0
+
+#agent_host.sendCommand("strafe 1")
+#agent_host.sendCommand("strafe 1 0")
+
+#agent_host.sendCommand("move 20")
+
+#while ok<1000:
+#	agent_host.sendCommand("move 1")     #And start running...
+#	time.sleep(1) 
+	 #agent_host.sendCommand("attack 1")
+#	ok = ok+1
 
 #************************ END AGENT COMMANDS **************************
 
