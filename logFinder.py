@@ -50,7 +50,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
     <ServerHandlers>
       <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" seed=""/>
       <DrawingDecorator>
-        <DrawBlock x="''' + str(logX) + '''"  y="227" z="'''+ str(logZ) +'''" type="log"/>
+        <DrawItem x="''' + str(logX) + '''"  y="227" z="'''+ str(logZ) +'''" type="log"/>
         <DrawEntity x="10" y="227" z="10" type="MinecartRideable"/>
         <DrawItem x="0" y="227" z="10" type="cookie"/>
       </DrawingDecorator>
