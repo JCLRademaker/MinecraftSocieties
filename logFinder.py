@@ -129,7 +129,7 @@ while world_state.is_mission_running:
                 if ent.name == "log":
 					newYaw = calcYawToMob(ent, current_x, current_y, current_z)
 					deltaYaw = newYaw - yaw
-					if not deltaYaw == 0:
+					if abs(deltaYaw) > 1:
 						while deltaYaw < -180:
 							deltaYaw += 360;
 						while deltaYaw > 180:
@@ -138,6 +138,8 @@ while world_state.is_mission_running:
 						# And turn:
 						agent_host.sendCommand("turn " + str(deltaYaw))
 						print(str(deltaYaw))
+					else:
+						agent_host.sendCommand("move 1")
 					break
 
     for error in world_state.errors:
