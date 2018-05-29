@@ -118,11 +118,10 @@ while world_state.is_mission_running:
     if world_state.number_of_observations_since_last_state > 0:
         msg = world_state.observations[-1].text
         data = json.loads(msg)
-        current_x = data.get(u'XPos', 0)
-        current_z = data.get(u'ZPos', 0)
-        current_y = data.get(u'YPos', 0)
-        yaw = data.get(u'yaw', 0)
-        print("yaw = " + str(yaw))
+        current_x = data['close_entities'][0][u'x']
+        current_z = data['close_entities'][0][u'z']
+        current_y = data['close_entities'][0][u'y']
+        yaw = data['close_entities'][0][u'yaw']
 
         if "close_entities" in data:
             entities = [EntityInfo(k["x"], k["y"], k["z"], k["name"], k.get("quantity")) for k in data["close_entities"]] #Unpack the json into a tuple
