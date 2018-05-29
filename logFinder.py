@@ -78,6 +78,9 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <ObservationFromNearbyEntities>
         <Range name="close_entities" xrange="100" yrange="20" zrange="100" update_frequency="20" />
       </ObservationFromNearbyEntities>
+      <AgentQuitFromCollectingItem> 
+        <Item type="log" />
+      </AgentQuitFromCollectingItem>
     </AgentHandlers>
   </AgentSection>  
   
@@ -116,13 +119,16 @@ print("Mission running ", end=' ')
 while world_state.is_mission_running:
     world_state = agent_host.getWorldState()
     if world_state.number_of_observations_since_last_state > 0:
+        # Read the agent position and yaw from the observations
         msg = world_state.observations[-1].text
         data = json.loads(msg)
-        current_x = data['close_entities'][0][u'x']
-        current_z = data['close_entities'][0][u'z']
-        current_y = data['close_entities'][0][u'y']
-        yaw = data['close_entities'][0][u'yaw']
+        agentObject = data['close_entities'][0]
+        current_x = agentObject[u'x']
+        current_z = agentObject[u'z']
+        current_y = agentObject[u'y']
+        yaw = agentObject[u'yaw']
 
+        #Item(in this case log) detection 
         if "close_entities" in data:
             entities = [EntityInfo(k["x"], k["y"], k["z"], k["name"], k.get("quantity")) for k in data["close_entities"]] #Unpack the json into a tuple
             for ent in entities:
@@ -135,9 +141,8 @@ while world_state.is_mission_running:
 						while deltaYaw > 180:
 							deltaYaw -= 360;
 						deltaYaw /= 180.0;
-						# And turn:
+						# Turn the agent
 						agent_host.sendCommand("turn " + str(deltaYaw))
-						print(str(deltaYaw))
 					else:
 						agent_host.sendCommand("move 1")
 					break
