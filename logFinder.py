@@ -8,6 +8,7 @@ import time
 import random
 import json
 import errno
+import math
 from collections import namedtuple
 
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -34,6 +35,14 @@ if agent_host.receivedArgument("help"):
 # Coordinates to randomly spawn a tree on  
 logX = random.randint(1,10)
 logZ = random.randint(1,10)
+
+#Calculate the angle towards our target
+def calcYawToMob(entity, x, y, z):
+	dx = entity.x - x
+	dz = entity.z - z
+	yaw = -180 * math.atan2(dx, dz) / math.pi
+	return yaw
+
   
  # -- set up the mission --
 xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
@@ -65,7 +74,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <Placement x="0" y="227.0" z="0" pitch="0" yaw="0"/>
     </AgentStart>
     <AgentHandlers>
-      <DiscreteMovementCommands/>
+      <ContinuousMovementCommands/>
       <ObservationFromNearbyEntities>
         <Range name="close_entities" xrange="100" yrange="20" zrange="100" update_frequency="20" />
       </ObservationFromNearbyEntities>
@@ -105,14 +114,32 @@ print("Mission running ", end=' ')
 
 # Loop until mission ends:
 while world_state.is_mission_running:
-    world_state = agent_host.getWorldState()    # Get the new worldstate
+    world_state = agent_host.getWorldState()
     if world_state.number_of_observations_since_last_state > 0:
         msg = world_state.observations[-1].text
-        ob = json.loads(msg)
-        if "close_entities" in ob:
-            entities = [EntityInfo(k["x"], k["y"], k["z"], k["name"], k.get("quantity")) for k in ob["close_entities"]] #Unpack the json into a tuple
+        data = json.loads(msg)
+        current_x = data.get(u'XPos', 0)
+        current_z = data.get(u'ZPos', 0)
+        current_y = data.get(u'YPos', 0)
+        yaw = data.get(u'yaw', 0)
+        print("yaw = " + str(yaw))
+
+        if "close_entities" in data:
+            entities = [EntityInfo(k["x"], k["y"], k["z"], k["name"], k.get("quantity")) for k in data["close_entities"]] #Unpack the json into a tuple
             for ent in entities:
-                print(ent.name, ent.x, ent.z, ent.quantity)
+                if ent.name == "log":
+					newYaw = calcYawToMob(ent, current_x, current_y, current_z)
+					deltaYaw = newYaw - yaw
+					if not deltaYaw == 0:
+						while deltaYaw < -180:
+							deltaYaw += 360;
+						while deltaYaw > 180:
+							deltaYaw -= 360;
+						deltaYaw /= 180.0;
+						# And turn:
+						agent_host.sendCommand("turn " + str(deltaYaw))
+						print(str(deltaYaw))
+					break
 
     for error in world_state.errors:
         print("Error:",error.text)
