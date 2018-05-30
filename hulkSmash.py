@@ -115,7 +115,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 		<AbsoluteMovementCommands/>
 	    <ObservationFromFullStats/>
 		<ObservationFromNearbyEntities>
-			<Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+			<Range name="close_entities" xrange="5" yrange="1" zrange="5" update_frequency="5" />
         </ObservationFromNearbyEntities>
 	  	<ObservationFromGrid>
             <Grid name="tree_stumps" absoluteCoords="false">
