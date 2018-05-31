@@ -47,7 +47,7 @@ logZ = -1
 logXX = -2
 logZZ = 2
 
-logXXX = 4
+logXXX = 3
 logZZZ = 3
 
 # Mapping from which resources can be gathered by which tools
