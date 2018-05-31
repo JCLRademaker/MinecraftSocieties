@@ -42,10 +42,13 @@ if agent_host.receivedArgument("help"):
   
 # Coordinates to randomly spawn a tree on  
 logX = -4
-logZ = -5
+logZ = -1
 
 logXX = -2
-logZZ = -1
+logZZ = 2
+
+logXXX = 4
+logZZZ = 3
 
 # Mapping from which resources can be gathered by which tools
 resourceToToolMapping = { u'log' : "iron_axe"}
@@ -90,7 +93,8 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" seed="" forceReset = "1"/>
       <DrawingDecorator>
 		<DrawBlock x="''' + str(logX) + '''"  y="227" z="'''+ str(logZ) +'''" type="log"/>
-		<DrawBlock x="''' + str(logXX) + '''"  y="227" z="'''+ str(logZZ) +'''" type="log"/>
+		<DrawBlock x="''' + str(logXX) + '''"  y="227" z="'''+ str(logZZ) +'''" type="log"/>	
+		<DrawBlock x="''' + str(logXXX) + '''"  y="227" z="'''+ str(logZZZ) +'''" type="log"/>
         <DrawEntity x="10" y="227" z="10" type="MinecartRideable"/>
         <DrawItem x="0" y="227" z="10" type="cookie"/>
       </DrawingDecorator>
@@ -115,7 +119,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 		<AbsoluteMovementCommands/>
 	    <ObservationFromFullStats/>
 		<ObservationFromNearbyEntities>
-			<Range name="close_entities" xrange="5" yrange="1" zrange="5" update_frequency="5" />
+			<Range name="close_entities" xrange="5" yrange="1" zrange="5" update_frequency="1" />
         </ObservationFromNearbyEntities>
 	  	<ObservationFromGrid>
             <Grid name="tree_stumps" absoluteCoords="false">
@@ -193,7 +197,7 @@ while world_state.is_mission_running:
 							deltaYaw += 360;
 						while deltaYaw > 180:
 							deltaYaw -= 360;
-						deltaYaw /= 180.0;
+						deltaYaw /= 90.0;
 						# Turn the agent
 						agent_host.sendCommand("turn " + str(deltaYaw))
                     else:
@@ -249,7 +253,7 @@ while world_state.is_mission_running:
                             deltaYaw += 360;
                         while deltaYaw > 180:
                             deltaYaw -= 360;
-                        deltaYaw /= 180.0;
+                        deltaYaw /= 90.0;
                         agent_host.sendCommand("turn " + str(deltaYaw))
                     else:
                         # Keep walking closer
