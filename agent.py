@@ -45,8 +45,8 @@ def pathag(sidea, sideb):
     sidec = math.sqrt(csquare)
     return sidec
 
-def tryEquipItem(itemName):
-    test = "ik neuk jullie allemaal de moeder"
+def dist(a, b):
+    return math.sqrt(a*a + b*b)
 
 isCollecting = False
 isDroppingOff = False
@@ -139,34 +139,64 @@ class Agent:
     def MoveToLocation(self, targetLocation):
         """
             The agent moves to a location in world-space
+            targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
         #Calculate the yaw needed to orientate towards the stump
         newYaw = calcYawToBlock(targetLocation[0], targetLocation[2], self.Position[0], self.Position[2])
         deltaYaw = newYaw - self.Position[3]
 
-        # Turn towards the stump, if we are facing it walk close enough to it for us to be able to harvest, and harvest it
-        if abs(deltaYaw) > 2:
+        if abs(deltaYaw) > 2:   # Turn towards the stump
             while deltaYaw < -180:
                 deltaYaw += 360;
             while deltaYaw > 180:
                 deltaYaw -= 360;
             deltaYaw /= 90.0;
             self.agent_host.sendCommand("turn " + str(deltaYaw))
-        else:
-            # Keep walking closer
-            if pathag(targetLocation[0] - self.Position[0], targetLocation[2] - self.Position[2]) > 2.5:
-                self.agent_host.sendCommand("move 1")
+
+        else: # If the agent is too far away:
+            di = dist(targetLocation[0] - self.Position[0], targetLocation[2] - self.Position[2])
+            if  di > 5:
+                sp = min(1, di)
+                self.agent_host.sendCommand("move "+ str(sp))
                 self.agent_host.sendCommand("turn 0")
-            # Stop movement to harvest the stump
+
+            # TODO:
+            # Disable from hereonafter
             else:
-                self.agent_host.sendCommand("move 0")
-                self.agent_host.sendCommand("turn 0")
-                if self.Position[4] < 20:
-                    self.agent_host.sendCommand("pitch 0.5")
-                else:
-                    self.agent_host.sendCommand("pitch 0")
-                    return True
+                return self.LookAtLocation(targetLocation)
+
+    def TurntoLocation(self, targetLocation):
+        newYaw = calcYawToBlock(targetLocation[0], targetLocation[2], self.Position[0], self.Position[2])
+        deltaYaw = newYaw - self.Position[3]
+
+        # Turn in the XZ plane towards the location
+
+        if 0.3 < abs(deltaYaw) > 2:
+            while deltaYaw < -180:
+                deltaYaw += 360;
+            while deltaYaw > 180:
+                deltaYaw -= 360;
+            deltaYaw /= 90.0;
+
+            self.agent_host.sendCommand("turn " + str(deltaYaw))
+            return False
+
+        return True
+
+    def LookAtLocation(self, targetLocation):
+        """
+            Makes the agent turn and look at a location
+            This is still experimental
+        """
+        self.TurntoLocation(targetLocation)
+
+        # Calculate and set the pitch of the agent
+        newPitch = 0.5 + self.Position[4] / 180 # [-2,2]
+
+        if (abs(newPitch) > 0.1):
+            self.agent_host.sendCommand("pitch " + str(newPitch))
+            return True
 
     def MoveToRelative(self, index):
         """ Mobseove to a block at a certain index in the observable grid """

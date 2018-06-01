@@ -1,8 +1,5 @@
 from __future__ import print_function
 
-from builtins import range
-from collections import namedtuple
-
 from agent import Agent
 
 # ==============================================================================
@@ -102,9 +99,8 @@ while agent.is_mission_running():
                     break
 
             if agent.MoveToRelative(index):
-                agent.sendCommand("use 1")
-                agent.sendCommand("use 0")
-
+                print("done")
+                agent.SendCommand("use 1")
 
 
 print()
