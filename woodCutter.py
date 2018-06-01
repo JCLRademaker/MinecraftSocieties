@@ -71,9 +71,6 @@ def pathag(sidea, sideb):
     csquare = (sidea ** 2) + (sideb ** 2)
     sidec = math.sqrt(csquare)
     return sidec
-    
-def tryEquipItem(itemName):
-    test = "ik neuk jullie allemaal de moeder" 
 
     
   
