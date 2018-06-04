@@ -19,6 +19,9 @@ EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
 InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity, inventory, index')
 InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
+# Mapping from which resources can be gathered by which tools
+resourceToToolMapping = { u'log' : "iron_axe"}
+
 if sys.version_info[0] == 2:
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
 else:
@@ -217,7 +220,24 @@ class Agent:
         new_z = self.Position[2] - row_diff
 
         return self.MoveToLocation((new_x, self.Position[1], new_z))
-
+        
+    def EquipToolForResource(self, resource, inventory):
+        """
+            Looks up the needed tool for the resource to be gathered
+            and equips it.
+            Returns True for a succeed and False for a fail       
+        """       
+        neededTool = resourceToToolMapping[resource]
+        
+        for item in inventory:
+            if item.type == neededTool:
+                itemIndex = item.index + 1
+                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 1")
+                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 0")
+                return True
+                
+        return False                
+                
 
     def SendCommand(self, command):
         """ Sends a singular command for the agent to execute """
