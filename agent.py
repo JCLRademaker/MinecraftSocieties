@@ -134,11 +134,11 @@ class Agent:
         return self.MoveLookAtBlock(spatial.LocationFromIndex(self.Position, index))
 
     def MoveToRelative(self, index):
+        """ Move to a block at a certain index in the observable grid """
         self.yawd = False
         self.movd = False
         self.pitd = False
 
-        """ Move to a block at a certain index in the observable grid """
         return self.MoveLookAtLocation(spatial.LocationFromIndex(self.Position, index))
 
 # ==============================================================================
@@ -196,7 +196,7 @@ class Agent:
     def TryTurnTo(self, targetLocation):
         """ Turn in the XZ plane towards the location """
         # Calculate the actual angle
-        deltaYaw = angles.CalcYawToLocation(self.Position, targetLocation)
+        deltaYaw = angles.CalcDeltaYaw(self.Position, targetLocation)
 
         # If the agent's direction is within 5 degrees of the location it is fine
         if abs(deltaYaw) < 5:
@@ -209,14 +209,8 @@ class Agent:
         return False
 
     def TryPitchTo(self, targetLocation):
-        """
-            Makes the agent turn and look at a location
-            This is still experimental
-        """
-        dx = max(abs(targetLocation[0] - self.Position[0]), 1)
-        dy = max(abs(targetLocation[1] - self.Position[1]), 1)
-
-        deltaPitch = angles.CalcDAngle(dy, dx, 90, self.Position[4])
+        """ Makes the agent turn and look at a location """
+        deltaPitch = angles.CalcDeltaPitch(self.Position, targetLocation)
 
         # If the agent's direction is within 5 degrees of the location it is fine
         if abs(deltaPitch) < 5:

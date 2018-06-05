@@ -11,7 +11,17 @@ def CalcDAngle(dA, dB, maxAngle, curAngle):
 
     return dangle
 
-def CalcYawToLocation(agent, location):
+def CalcDeltaPitch(agent, location):
+    dx = max(abs(location[0] - agent[0]), 1)
+    dy = max(abs(location[1] - agent[1]), 1)
+
+    deltaPitch = CalcDAngle(dy, dx, 90, agent[4])
+
+    return deltaPitch
+
+
+
+def CalcDeltaYaw(agent, location):
     """ Calculates the difference in angle required to face a location
         returns: the angle in degrees [-180, 180]
     """
