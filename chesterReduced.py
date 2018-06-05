@@ -98,9 +98,10 @@ while agent.is_mission_running():
                     chestTarget = b
                     break
 
-            if agent.MoveToRelative(index):
+            if agent.MoveToRelBLock(index):
                 print("done")
                 agent.SendCommand("use 1")
+                break
 
 
 print()

@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from builtins import range
 from collections import namedtuple
+from tools import angles, spatial
 
 import MalmoPython
 import os
@@ -28,64 +29,40 @@ else:
     import functools
     print = functools.partial(print, flush=True)
 
-
-#Calculate the angle towards our target
-def calcYawToBlock(objectx, objectz, agentx, agentz):
-    dx = objectx - agentx
-    dz = objectz - agentz
-    yaw = -180 * math.atan2(dx, dz) / math.pi
-    return yaw
-
-#Calculate the angle towards our target
-def calcYawToEntity(entity, x, y, z):
-	dx = entity.x - x
-	dz = entity.z - z
-	yaw = -180 * math.atan2(dx, dz) / math.pi
-	return yaw
-
-def pathag(sidea, sideb):
-    csquare = (sidea ** 2) + (sideb ** 2)
-    sidec = math.sqrt(csquare)
-    return sidec
-
-def dist(a, b):
-    return math.sqrt(a*a + b*b)
-
+# TODO:
+# Why is this here?
 isCollecting = False
 isDroppingOff = False
 
-def LocationFromIndex(agent, index):
-    # The grid is a 13x13 area, of which the agent is in the center..ish
-    gridC = float(13/2)
-
-    # In which of these rows/columns the location falls
-    col = gridC - math.floor((index-1)/13)
-    row = gridC - (index-1) % float(13)
-
-    return (agent[0] - row , agent[1], agent[2] - col)
+# ==============================================================================
+# ========================== The Generic Agent Object ==========================
+# ==============================================================================
 
 
 class Agent:
+# ==============================================================================
+# ===================== Initializers and starting missions =====================
+# ==============================================================================
     def __init__(self, missionXML):
         self.my_mission = MalmoPython.MissionSpec(missionXML,True)
         self.my_mission_record = MalmoPython.MissionRecordSpec()
 
-        self.MissionLoop = None
-
+        # The Malmo agent_host
         self.agent_host = MalmoPython.AgentHost()
 
+        # Try and connect to a world
         try:
             self.agent_host.parse( sys.argv )
         except RuntimeError as e:
             print('ERROR:',e)
             print(self.agent_host.getUsage())
             exit(1)
+
         if self.agent_host.receivedArgument("help"):
             print(self.agent_host.getUsage())
             exit(0)
 
         self.World = None
-
 
     def StartMission(self):
         """ Try to connect to the server, starting the mission """
@@ -116,6 +93,13 @@ class Agent:
         print()
         print("Mission running ", end=' ')
 
+# ==============================================================================
+# ================================== Wrappers ==================================
+# ==============================================================================
+    def SendCommand(self, command):
+        """ Sends a singular command for the agent to execute """
+        self.agent_host.sendCommand(command)
+
     def is_mission_running(self):
         """ Whether or not the agent is running """
         return self.World.is_mission_running
@@ -138,107 +122,128 @@ class Agent:
 
         return False, False
 
+# ==============================================================================
+# =========================== Call these for ovement ===========================
+# ==============================================================================
+    def MoveToRelBLock(self, index):
+        """ Move towards a block and look at it """
+        self.yawd = False
+        self.movd = False
+        self.pitd = False
 
-    def MoveToLocation(self, targetLocation):
+        return self.MoveLookAtBlock(spatial.LocationFromIndex(self.Position, index))
+
+    def MoveToRelative(self, index):
+        self.yawd = False
+        self.movd = False
+        self.pitd = False
+
+        """ Move to a block at a certain index in the observable grid """
+        return self.MoveLookAtLocation(spatial.LocationFromIndex(self.Position, index))
+
+# ==============================================================================
+# ======================== High Level Movement Commands ========================
+# ==============================================================================
+    def MoveLookAtBlock(self, targetLocation):
+        """
+            The agent moves into range of a block in the world and looks at it
+            targetLocation: a tuple with (X, Y, Z) coordinates of the target area
+            returns: returns a boolean whether or not the agent has arrived
+        """
+        targetLocationN = (targetLocation[0], targetLocation[1] + 0.5, targetLocation[2])
+        return self.MoveLookAtLocation(targetLocationN, distance = 3)
+
+    def MoveLookAtLocation(self, targetLocation, distance = 0):
         """
             The agent moves to a location in world-space
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
-        #Calculate the yaw needed to orientate towards the stump
-        newYaw = calcYawToBlock(targetLocation[0], targetLocation[2], self.Position[0], self.Position[2])
-        deltaYaw = newYaw - self.Position[3]
 
-        if abs(deltaYaw) > 2:   # Turn towards the stump
-            while deltaYaw < -180:
-                deltaYaw += 360;
-            while deltaYaw > 180:
-                deltaYaw -= 360;
-            deltaYaw /= 90.0;
-            self.agent_host.sendCommand("turn " + str(deltaYaw))
+        # Reset movement every step
+        self.SendCommand("move 0")
+        self.SendCommand("pitch 0")
+        self.SendCommand("turn 0")
 
-        else: # If the agent is too far away:
-            di = dist(targetLocation[0] - self.Position[0], targetLocation[2] - self.Position[2])
-            if  di > 5:
-                sp = min(1, di)
+        # Turn towards the location in the XZ plane
+        if not self.yawd:
+            if self.TryTurnTo(targetLocation):
+                self.yawd = True
+
+        # Move towards it
+        if self.yawd and not self.movd:
+            di = spatial.dist(targetLocation[0] - self.Position[0], targetLocation[2] - self.Position[2])
+
+            if di > distance:
+                sp = min(1, di/10)
                 self.agent_host.sendCommand("move "+ str(sp))
-                self.agent_host.sendCommand("turn 0")
-
-            # TODO:
-            # Disable from hereonafter
             else:
-                return self.LookAtLocation(targetLocation)
+                self.movd = True
 
-    def TurntoLocation(self, targetLocation):
-        newYaw = calcYawToBlock(targetLocation[0], targetLocation[2], self.Position[0], self.Position[2])
-        deltaYaw = newYaw - self.Position[3]
+        # Turn towards the location in the XY plane
+        if self.yawd and self.movd and not self.pitd:
+            print(self.pitd)
+            if self.TryPitchTo(targetLocation):
+                self.pitd = True
 
-        # Turn in the XZ plane towards the location
+        # It is there and looks at it
+        if self.yawd and self.movd and self.pitd:
+            return True
 
-        if 0.3 < abs(deltaYaw) > 2:
-            while deltaYaw < -180:
-                deltaYaw += 360;
-            while deltaYaw > 180:
-                deltaYaw -= 360;
-            deltaYaw /= 90.0;
+# ==============================================================================
+# ============================ Movement Subcommands ============================
+# ==============================================================================
+    def TryTurnTo(self, targetLocation):
+        """ Turn in the XZ plane towards the location """
+        # Calculate the actual angle
+        deltaYaw = angles.CalcYawToLocation(self.Position, targetLocation)
 
-            self.agent_host.sendCommand("turn " + str(deltaYaw))
-            return False
+        # If the agent's direction is within 5 degrees of the location it is fine
+        if abs(deltaYaw) < 5:
+            return True
 
-        return True
+        # Determine turn speed:
+        sp = min(1, deltaYaw / 90)
 
-    def LookAtLocation(self, targetLocation):
+        self.SendCommand("turn " + str(sp))
+        return False
+
+    def TryPitchTo(self, targetLocation):
         """
             Makes the agent turn and look at a location
             This is still experimental
         """
-        self.TurntoLocation(targetLocation)
+        dx = max(abs(targetLocation[0] - self.Position[0]), 1)
+        dy = max(abs(targetLocation[1] - self.Position[1]), 1)
 
-        # Calculate and set the pitch of the agent
-        newPitch = 0.5 + self.Position[4] / 180 # [-2,2]
+        deltaPitch = angles.CalcDAngle(dy, dx, 90, self.Position[4])
 
-        if (abs(newPitch) > 0.1):
-            self.agent_host.sendCommand("pitch " + str(newPitch))
+        # If the agent's direction is within 5 degrees of the location it is fine
+        if abs(deltaPitch) < 5:
             return True
 
-    def MoveToRelative(self, index):
-        """ Mobseove to a block at a certain index in the observable grid """
-        # Calculate the in-grid coordinates of the agent and the object
-        agent_row = 13/2
-        agent_column = agent_row
-        object_row = math.floor((index-1)/13)
-        object_column = (index-1)%float(13)
+        # Determine turn speed:
+        sp = min(1, deltaPitch / 90)
 
-        # Calculate the difference of the in-grid coordinates
-        row_diff = float(agent_row) - float(object_row)
-        column_diff = float(agent_column) - float(object_column)
+        self.SendCommand("pitch " + str(sp))
+        return False
 
-        # Hereafter we have x and z coordinates
-
-        #Calculate the absolute coordinate of the object
-        new_x = self.Position[0] - column_diff
-        new_z = self.Position[2] - row_diff
-
-        return self.MoveToLocation((new_x, self.Position[1], new_z))
-        
+# ==============================================================================
+# ============================= Resource Gathering =============================
+# ==============================================================================
     def EquipToolForResource(self, resource, inventory):
         """
             Looks up the needed tool for the resource to be gathered
             and equips it.
-            Returns True for a succeed and False for a fail       
-        """       
+            Returns True for a succeed and False for a fail
+        """
         neededTool = resourceToToolMapping[resource]
-        
+
         for item in inventory:
             if item.type == neededTool:
                 itemIndex = item.index + 1
                 self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 1")
                 self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 0")
                 return True
-                
-        return False                
-                
 
-    def SendCommand(self, command):
-        """ Sends a singular command for the agent to execute """
-        self.agent_host.sendCommand(command)
+        return False
