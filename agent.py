@@ -92,7 +92,7 @@ class Agent:
 
         print()
         print("Mission running ", end=' ')
-
+        
 # ==============================================================================
 # ================================== Wrappers ==================================
 # ==============================================================================
@@ -103,6 +103,11 @@ class Agent:
     def is_mission_running(self):
         """ Whether or not the agent is running """
         return self.World.is_mission_running
+        
+    def StopMissionManually(self):
+        """ Manually stops an agents mission, useful if for some reason the XML quit conditions fail/fire too early """
+        self.agent_host.sendCommand("quit")
+        print("Mission ended manually")
 
     def Observe(self):
         """ Returns whether or not the agent observed something new and the data """
