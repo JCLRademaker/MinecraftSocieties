@@ -142,7 +142,7 @@ class Agent:
 
             # Clean the chat and turn it into chat objects
             chatL = self.chatter.ReadChat(chat)
-            if len(chatL):
+            if len(chatL) > 0:
                 return True, chatL
 
         return False, False
