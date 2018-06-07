@@ -141,9 +141,8 @@ class Agent:
             chat = data.get(u'Chat', "")
 
             # Clean the chat and turn it into chat objects
-            if chat:
-                chatL = self.chatter.ReadChat(chat)
-
+            chatL = self.chatter.ReadChat(chat)
+            if len(chatL):
                 return True, chatL
 
         return False, False
