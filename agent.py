@@ -158,7 +158,7 @@ class Agent:
         self.SendCommand("chat " + msg)
 
 # ==============================================================================
-# =========================== Call these for ovement ===========================
+# ======================== Call these functions to Move ========================
 # ==============================================================================
     def MoveToRelBLock(self, index):
         """ Move towards a block and look at it """
