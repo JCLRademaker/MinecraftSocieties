@@ -7,12 +7,9 @@ from agent import Agent
 # ==============================================================================
 
 
-# Coordinates to randomly spawn a tree on
+# Coordinates to spawn a log on.
 logX = -4
 logZ = -5
-
-logXX = -2
-logZZ = -1
 
 
 # Mission XML
@@ -28,13 +25,12 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       </Time>
     </ServerInitialConditions>
     <ServerHandlers>
-      <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" seed="" forceReset = "1"/>
+      <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" seed="" forceReset = "0"/>
       <DrawingDecorator>
-		<DrawBlock x="''' + str(logX) + '''"  y="227" z="'''+ str(logZ) +'''" type="chest"/>
+		<DrawBlock x="''' + str(logX) + '''"  y="227" z="''' + str(logZ) + '''" type="ender_chest"/>
         <DrawItem x="0" y="227" z="10" type="cookie"/>
       </DrawingDecorator>
       <ServerQuitFromTimeUp description="" timeLimitMs="35000"/>
-      <ServerQuitWhenAnyAgentFinishes description=""/>
     </ServerHandlers>
   </ServerSection>
 
@@ -45,6 +41,8 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <Inventory>
           <InventoryItem slot="1" type="iron_axe"/>
           <InventoryItem slot="2" type="iron_pickaxe"/>
+		  <InventoryItem slot="3" type="log" quantity="63"/>
+		  <InventoryItem slot="4" type="log" quantity="12"/>
       </Inventory>
     </AgentStart>
     <AgentHandlers>
@@ -82,9 +80,7 @@ agent.StartMission()
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
-        # Detect nearby treestumps, and if we are not collecting items proceed to harvest the stump
         if "worldGrid" in data:
-
             # Get the observed grid
             blocks = data.get(u'worldGrid', 0)
             chestTarget = []
@@ -94,15 +90,16 @@ while agent.is_mission_running():
             # Scan for chests:
             for b in blocks:
                 index += 1
-                if b == u'chest':
+                if b == u'ender_chest':
                     chestTarget = b
                     break
 
-            if agent.MoveToRelBLock(index):
-                print("done")
+            if agent.MoveToRelBlock(index):
                 agent.SendCommand("use 1")
+                if u'inventoriesAvailable' in data:
+                    # Adds items of a specified type to the chest
+                    agent.AddItemsToChest(data[u'inventoriesAvailable'], data[u'inventory'], "enderchest", u'log')
                 break
-
 
 print()
 print("Mission ended")

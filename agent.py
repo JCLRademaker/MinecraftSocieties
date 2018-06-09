@@ -2,8 +2,7 @@ from __future__ import print_function
 
 from builtins import range
 from collections import namedtuple
-from tools import angles, spatial
-from message import chat
+from tools import angles, spatial, inventory
 
 import MalmoPython
 import os
@@ -41,9 +40,9 @@ isDroppingOff = False
 
 
 class Agent:
-# ==============================================================================
-# ===================== Initializers and starting missions =====================
-# ==============================================================================
+    # ==============================================================================
+    # ===================== Initializers and starting missions =====================
+    # ==============================================================================
     def __init__(self, missionXML):
         self.my_mission = MalmoPython.MissionSpec(missionXML,True)
         self.my_mission_record = MalmoPython.MissionRecordSpec()
@@ -63,9 +62,7 @@ class Agent:
             print(self.agent_host.getUsage())
             exit(0)
 
-        self.world_state = None
-
-        self.chatter = chat.ChatClient("Walker")
+        self.World = None
 
     def StartMission(self):
         """ Try to connect to the server, starting the mission """
@@ -84,18 +81,18 @@ class Agent:
         # Loop until mission starts:
         print("Waiting for the mission to start ", end=' ')
 
-        self.world_state = self.agent_host.getWorldState()
-        while not self.world_state.has_mission_begun:
+        self.World = self.agent_host.getWorldState()
+        while not self.World.has_mission_begun:
             print(".", end="")
             time.sleep(0.1)
-            self.world_state = self.agent_host.getWorldState()
+            self.World = self.agent_host.getWorldState()
 
-            for error in self.world_state.errors:
+            for error in self.World.errors:
                 print("Error:",error.text)
 
         print()
         print("Mission running ", end=' ')
-
+        
 # ==============================================================================
 # ================================== Wrappers ==================================
 # ==============================================================================
@@ -105,19 +102,19 @@ class Agent:
 
     def is_mission_running(self):
         """ Whether or not the agent is running """
-        return self.world_state.is_mission_running
-
-    def Stop(self):
+        return self.World.is_mission_running
+        
+    def StopMissionManually(self):
         """ Manually stops an agents mission, useful if for some reason the XML quit conditions fail/fire too early """
         self.agent_host.sendCommand("quit")
         print("Mission ended manually")
 
     def Observe(self):
         """ Returns whether or not the agent observed something new and the data """
-        self.world_state = self.agent_host.getWorldState()
+        self.World = self.agent_host.getWorldState()
 
-        if self.world_state.number_of_observations_since_last_state > 0:
-            msg = self.world_state.observations[-1].text
+        if self.World.number_of_observations_since_last_state > 0:
+            msg = self.World.observations[-1].text
             data = json.loads(msg)
             self.Position = (
                 data.get(u'XPos', 0),
@@ -130,36 +127,10 @@ class Agent:
 
         return False, False
 
-    def GetChat(self):
-        """
-            Returns whether or not the agent has read new chat messages
-            Returns a list  of the messages in the format "<sender> message"
-        """
-        if self.world_state.number_of_observations_since_last_state > 0:
-            msg = self.world_state.observations[-1].text
-            data = json.loads(msg)
-            chat = data.get(u'Chat', "")
-
-            # Clean the chat and turn it into chat objects
-            chatL = self.chatter.ReadChat(chat)
-            if len(chatL) > 0:
-                return True, chatL
-
-        return False, False
-
-    def SendMessage(self, message, alert = False, target = ""):
-        """
-            Sends a message in the chat
-            alert: optional argument, increases the priority of the message
-            target: optional argument, the name of the targeted agent
-        """
-        msg = self.chatter.StageMessage(message)
-        self.SendCommand("chat " + msg)
-
 # ==============================================================================
-# ======================== Call these functions to Move ========================
+# =========================== Call these for movement ==========================
 # ==============================================================================
-    def MoveToRelBLock(self, index):
+    def MoveToRelBlock(self, index):
         """ Move towards a block and look at it """
         self.yawd = False
         self.movd = False
@@ -216,7 +187,7 @@ class Agent:
 
         # Turn towards the location in the XY plane
         if self.yawd and self.movd and not self.pitd:
-            print(self.pitd)
+            # print(self.pitd)
             if self.TryPitchTo(targetLocation):
                 self.pitd = True
 
@@ -269,9 +240,67 @@ class Agent:
 
         for item in inventory:
             if item.type == neededTool:
-                itemIndex = item.index + 1
-                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 1")
-                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 0")
+                item_index = item.index + 1
+                self.agent_host.sendCommand("hotbar." + str(item_index) + " 1")
+                self.agent_host.sendCommand("hotbar." + str(item_index) + " 0")
                 return True
 
         return False
+
+# ==============================================================================
+# ============================ Adding to Inventory =============================
+# ==============================================================================
+    def AddItemsToChest(self, available_inventories, super_inventory, other_inv_name, item_type):
+        agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
+        other_inv = inventory.GetInventory(super_inventory, other_inv_name, InventoryObject)
+
+        # Only do this if the inventory is not full
+        if not inventory.IsInventoryFull(other_inv):
+            # Retrieve items of type [ ] from the inventory
+            item_slots = inventory.GetItemsFromInventory(agent_inv, item_type)
+
+            # Size can only be retrieved through the available inventories entry, which sucks.
+            other_inv_size = inventory.GetInventorySize(available_inventories, other_inv_name)
+
+            # Items of type [ ] in both inventory and chest
+            if len(other_inv) > 0 and len(item_slots) >= 0:
+                # First combine if that's possible
+                item_slots = self.CombineSlots(other_inv, other_inv_name, item_slots)
+
+                # Try and SWAP slots if there are still items left in the inventory
+                if len(item_slots) > 0:
+                    indices_used = inventory.FindSlotsInUse(other_inv, other_inv_name)
+                    for slot in item_slots:
+                        self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, slot[0])
+            #  The chest is empty, add the items to the first (couple of) slot(s)
+            elif len(item_slots) > 0:
+                indices_used = []
+                for item in item_slots:
+                    self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, item[0])
+
+    def CombineSlots(self, other_inv, other_inv_name, item_slots):
+        # If there are slots left to COMBINE...
+        for slot in item_slots:
+            quantity_left = slot[1]
+            for item in other_inv:
+                if quantity_left > 0:
+                    # Always update the amount of items that is left (sadly has to be done manually, skeere tijden)
+                    command, quantity_left = inventory.CombineSlotsWithAgent(slot[0], other_inv_name, item, slot[1])
+                    if command != "":
+                        self.SendCommand(command)
+                else:
+                    slot = (-1, -1)
+        return [x for x in item_slots if x != (-1, -1)]
+
+    def CombineSwapSlots(self, indices_used, other_inv_name, other_inv_size, index):
+        # First try and combine with the last chest slot (could be that only
+        # 12 objects were added to the slot, and you want to fill that up first)
+        command = inventory.CombineSlotWithAgent(index, len(indices_used) - 1, other_inv_name)
+        self.SendCommand(command)
+
+        # Update the indices that are in use by the chest (sadly has to be done manually, skeere tijden).
+        command, indices_used = inventory.SwapSlotsWithAgent(index, other_inv_name, other_inv_size, indices_used)
+
+        # Swap item from inventory with (empty) item from chest
+        if command != "":
+            self.SendCommand(command)
