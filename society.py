@@ -11,6 +11,7 @@ import errno
 import math
 from collections import namedtuple
 import superflat_world
+import tasks
 
 # ==============================================================================
 # =========================== Initializing the world ===========================
@@ -33,7 +34,9 @@ agent.StartMission()
 # ==============================================================================
 
 while agent.is_mission_running():
-    print("running")
+    success, data = agent.Observe()
+    if success:
+        tasks.returnItems(u'log', data, agent)    
 
 print()
 print("Mission ended")

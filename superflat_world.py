@@ -69,7 +69,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                     </ServerInitialConditions>
                     <ServerHandlers>
                         <FlatWorldGenerator generatorString="3;57*1,2*3,2;35;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
-                        <ServerQuitFromTimeUp timeLimitMs="0"/>
+                        <ServerQuitFromTimeUp timeLimitMs="100000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                 </ServerSection>
@@ -82,6 +82,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                             <InventoryItem slot="0" type="diamond_pickaxe"/>
                             <InventoryItem slot="1" type="diamond_hoe"/>
                             <InventoryItem slot="2" type="iron_axe"/>
+                            <InventoryItem slot="4" type="log" quantity="12"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
