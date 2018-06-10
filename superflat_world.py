@@ -11,15 +11,6 @@ import random
 import time
 import xml.etree.ElementTree as ET
 
-
-if sys.version_info[0] == 2:
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
-else:
-    import functools
-
-    print = functools.partial(print, flush=True)
-
-
 # Create the whole <DrawingDecorator> section here
 def MakeFarmLand():
     chest_x = 2
@@ -55,14 +46,13 @@ def MakeFarmLand():
 
     return drawing_decorator
 
-
-# Settings
-forceReset = '"true"'
-d_decorator = MakeFarmLand()
-mob_types = (''' Cow ''' + ''' Chicken ''' + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''')
+def ReturnMobTypes():
+    mobs = (''' Cow ''' + ''' Chicken ''' + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''')
+    return mobs
 
 # Mission XML
-missionXML = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+def ReturnMissionXML(forceReset, d_decorator, mob_types):
+    missionXML = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <About>
                     <Summary>Hello world!</Summary>
@@ -85,71 +75,31 @@ missionXML = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
                 </ServerSection>
 
                 <AgentSection mode="Survival">
-                    <Name>MalmoTutorialBot</Name>
+                    <Name>Adam</Name>
                     <AgentStart>
                         <Placement x="0" y="61" z="0" pitch="0" yaw="0"/>
                         <Inventory>
                             <InventoryItem slot="0" type="diamond_pickaxe"/>
                             <InventoryItem slot="1" type="diamond_hoe"/>
+                            <InventoryItem slot="2" type="iron_axe"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
+                        <ObservationFromFullInventory flat="false"/>
+                        <InventoryCommands/>
+	                 	<AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>
                         <ContinuousMovementCommands turnSpeedDegs="180"/>
+	                   	<ObservationFromNearbyEntities>
+		                    <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+                        </ObservationFromNearbyEntities>
+                        <ObservationFromGrid>
+                            <Grid name="worldGrid" absoluteCoords="false">
+                            <min x="-6" y="0" z="-6"/>
+                            <max x="6" y="0" z="6"/>
+                            </Grid>
+                        </ObservationFromGrid>
                     </AgentHandlers>
                 </AgentSection>
             </Mission>'''
-
-
-# Create default Malmo objects:
-agent_host = MalmoPython.AgentHost()
-try:
-    agent_host.parse(sys.argv)
-except RuntimeError as e:
-    print('ERROR:', e)
-    print(agent_host.getUsage())
-    exit(1)
-if agent_host.receivedArgument("help"):
-    print(agent_host.getUsage())
-    exit(0)
-
-my_mission = MalmoPython.MissionSpec(missionXML, True)
-my_mission_record = MalmoPython.MissionRecordSpec()
-
-# Attempt to start a mission:
-max_retries = 3
-for retry in range(max_retries):
-    try:
-        agent_host.startMission(my_mission, my_mission_record)
-        break
-    except RuntimeError as e:
-        if retry == max_retries - 1:
-            print("Error starting mission:", e)
-            exit(1)
-        else:
-            time.sleep(2)
-
-# Loop until mission starts:
-print("Waiting for the mission to start ", end=' ')
-world_state = agent_host.getWorldState()
-while not world_state.has_mission_begun:
-    print(".", end="")
-    time.sleep(0.1)
-    world_state = agent_host.getWorldState()
-    for error in world_state.errors:
-        print("Error:", error.text)
-
-print()
-print("Mission running ", end=' ')
-
-# Loop until mission ends:
-while world_state.is_mission_running:
-    print(".", end="")
-    time.sleep(0.1)
-    world_state = agent_host.getWorldState()
-    for error in world_state.errors:
-        print("Error:", error.text)
-
-print()
-print("Mission ended")
-# Mission has ended.
+    return missionXML
