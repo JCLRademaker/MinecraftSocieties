@@ -3,15 +3,13 @@ from __future__ import print_function
 from builtins import range
 from collections import namedtuple
 from tools import angles, spatial, inventory
+from message import chat
 
 import MalmoPython
 import os
 import sys
 import time
-import random
 import json
-import errno
-import math
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -62,7 +60,9 @@ class Agent:
             print(self.agent_host.getUsage())
             exit(0)
 
-        self.World = None
+        self.world_state = None
+
+        self.chatter = chat.ChatClient("Walker")
 
     def StartMission(self):
         """ Try to connect to the server, starting the mission """
@@ -81,18 +81,18 @@ class Agent:
         # Loop until mission starts:
         print("Waiting for the mission to start ", end=' ')
 
-        self.World = self.agent_host.getWorldState()
-        while not self.World.has_mission_begun:
+        self.world_state = self.agent_host.getWorldState()
+        while not self.world_state.has_mission_begun:
             print(".", end="")
             time.sleep(0.1)
-            self.World = self.agent_host.getWorldState()
+            self.world_state = self.agent_host.getWorldState()
 
-            for error in self.World.errors:
+            for error in self.world_state.errors:
                 print("Error:",error.text)
 
         print()
         print("Mission running ", end=' ')
-        
+
 # ==============================================================================
 # ================================== Wrappers ==================================
 # ==============================================================================
@@ -102,19 +102,19 @@ class Agent:
 
     def is_mission_running(self):
         """ Whether or not the agent is running """
-        return self.World.is_mission_running
-        
-    def StopMissionManually(self):
+        return self.world_state.is_mission_running
+
+    def Stop(self):
         """ Manually stops an agents mission, useful if for some reason the XML quit conditions fail/fire too early """
         self.agent_host.sendCommand("quit")
         print("Mission ended manually")
 
     def Observe(self):
         """ Returns whether or not the agent observed something new and the data """
-        self.World = self.agent_host.getWorldState()
+        self.world_state = self.agent_host.getWorldState()
 
-        if self.World.number_of_observations_since_last_state > 0:
-            msg = self.World.observations[-1].text
+        if self.world_state.number_of_observations_since_last_state > 0:
+            msg = self.world_state.observations[-1].text
             data = json.loads(msg)
             self.Position = (
                 data.get(u'XPos', 0),
@@ -127,8 +127,34 @@ class Agent:
 
         return False, False
 
+    def GetChat(self):
+        """
+            Returns whether or not the agent has read new chat messages
+            Returns a list  of the messages in the format "<sender> message"
+        """
+        if self.world_state.number_of_observations_since_last_state > 0:
+            msg = self.world_state.observations[-1].text
+            data = json.loads(msg)
+            chat = data.get(u'Chat', "")
+
+            # Clean the chat and turn it into chat objects
+            chatL = self.chatter.ReadChat(chat)
+            if len(chatL) > 0:
+                return True, chatL
+
+        return False, False
+
+    def SendMessage(self, message, alert = False, target = ""):
+        """
+            Sends a message in the chat
+            alert: optional argument, increases the priority of the message
+            target: optional argument, the name of the targeted agent
+        """
+        msg = self.chatter.StageMessage(message)
+        self.SendCommand("chat " + msg)
+
 # ==============================================================================
-# =========================== Call these for movement ==========================
+# ======================== Call these functions to Move ========================
 # ==============================================================================
     def MoveToRelBlock(self, index):
         """ Move towards a block and look at it """
@@ -187,7 +213,7 @@ class Agent:
 
         # Turn towards the location in the XY plane
         if self.yawd and self.movd and not self.pitd:
-            # print(self.pitd)
+            # (self.pitd)
             if self.TryPitchTo(targetLocation):
                 self.pitd = True
 
@@ -240,9 +266,9 @@ class Agent:
 
         for item in inventory:
             if item.type == neededTool:
-                item_index = item.index + 1
-                self.agent_host.sendCommand("hotbar." + str(item_index) + " 1")
-                self.agent_host.sendCommand("hotbar." + str(item_index) + " 0")
+                itemIndex = item.index + 1
+                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 1")
+                self.agent_host.sendCommand("hotbar." + str(itemIndex) + " 0")
                 return True
 
         return False
