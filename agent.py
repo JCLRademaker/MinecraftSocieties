@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import json
+import math
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -61,7 +62,9 @@ class Agent:
             exit(0)
 
         self.world_state = None
-
+        self.big_map = {}
+        self.block_list = {}
+        self.home = (25,60,25) #TODO: Set dynamically at spawn
         self.chatter = chat.ChatClient("Walker")
 
     def StartMission(self):
@@ -181,6 +184,9 @@ class Agent:
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
+        self.yawd = False
+        self.movd = False
+        self.pitd = False
         targetLocationN = (targetLocation[0], targetLocation[1] + 0.5, targetLocation[2])
         return self.MoveLookAtLocation(targetLocationN, distance = 3)
 
@@ -190,6 +196,10 @@ class Agent:
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
+
+        self.yawd = False
+        self.movd = False
+        self.pitd = False
 
         # Reset movement every step
         self.SendCommand("move 0")
@@ -330,3 +340,53 @@ class Agent:
         # Swap item from inventory with (empty) item from chest
         if command != "":
             self.SendCommand(command)
+
+# ==============================================================================
+# ============================ Maintaining a Map ===============================
+# ==============================================================================
+
+    def UpdateMapFull(self, worldmap):
+        # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
+        # Update the big_map property to reflect the observed squares
+        # Update the block_list of all noteworthy blocks found.
+        for i in range(13):
+            for j in range(13):
+                block_value = worldmap[13 * i + j]
+                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2])- 6 + i)
+                self.UpdateMapBlock(block_value, block_position)
+
+
+    def UpdateMapEfficient(self, worldmap):
+        # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
+        # Update the big_map to reflect the observed squares
+        # Update the block_list of all noteworthy blocks found.
+        # Efficient only updates the outer rim of the observed field, rather than the entire field.
+        for i in range(13):
+            for j in (0,12):
+                block_value = worldmap[13 * i + j]
+                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
+                self.UpdateMapBlock(block_value, block_position)
+
+                block_value = worldmap[13 * j + i]
+                block_position = (math.floor(self.Position[0]) - 6 + i, math.floor(self.Position[2]) - 6 + j)
+                self.UpdateMapBlock(block_value, block_position)
+
+    def UpdateMapBlock(self, block_value, block_position):
+        map_key = (block_position[0] // 100, block_position[1] // 100)
+        # Generate a new chunk of map if necessary
+        if map_key not in self.big_map:
+            self.big_map[map_key] = [[False for _ in range(100)] for _ in range(100)]
+
+        if not self.big_map[map_key][block_position[1] % 100][block_position[0] % 100]:
+            self.big_map[map_key][block_position[1] % 100][block_position[0] % 100] = block_value
+            if block_value != "air":  # TODO: More filtering on non-interesting block types
+                if block_value not in self.block_list:
+                    self.block_list[block_value] = [block_position]
+                else:
+                    self.block_list[block_value].append(block_position)
+
+    def CheckMap(self, coordinates):
+        # Input: (x,y,z) coordinate tuple, of which the Y is not used.
+        # Returns the type of block at that location, or False if the location has not yet been scouted.
+        map_key = (coordinates[0] // 100, coordinates[2] // 100)
+        return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]

@@ -98,8 +98,8 @@ agent.StartMission()
 # ==============================================================================
 # Loop until mission ends:
 while agent.is_mission_running:
-    succes, data = agent.Observe()
-    if succes:
+    success, data = agent.Observe()
+    if success:
 		#Detect the items of a certain type(for now logs), orientate towards it and pick it up
         if "close_entities" in data:
             entities = [EntityInfo(k["x"], k["y"], k["z"], k["name"], k.get("quantity")) for k in data["close_entities"]] #Unpack the json into a tuple
