@@ -10,17 +10,17 @@ import json
 import errno
 import math
 from collections import namedtuple
-import superflat_world
+import superflatWorld
 import tasks
 
 # ==============================================================================
 # =========================== Initializing the world ===========================
 # ==============================================================================
 
-farmland = superflat_world.MakeFarmLand()
-mobs = superflat_world.ReturnMobTypes()
+farmland = superflatWorld.MakeFarmLand()
+mobs = superflatWorld.ReturnMobTypes()
 forceReset = "\"true\""
-xml = superflat_world.ReturnMissionXML(forceReset, farmland, mobs)
+xml = superflatWorld.ReturnMissionXML(forceReset, farmland, mobs)
 
 # ==============================================================================
 # =========================== Initializing the Agent ===========================
@@ -36,7 +36,7 @@ agent.StartMission()
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
-        tasks.returnItems(u'log', data, agent)    
+        tasks.returnItems(u'log', data, agent)
 
 print()
 print("Mission ended")
