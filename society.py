@@ -36,9 +36,8 @@ agent.StartMission()
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
-        tasks.returnItems(u'log', data, agent)    
+        tasks.returnItems(u'log', data, agent)
 
 print()
 print("Mission ended")
 # Mission has ended.
-

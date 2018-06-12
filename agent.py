@@ -57,11 +57,15 @@ class Agent:
             print(self.agent_host.getUsage())
             exit(1)
 
+        #
         if self.agent_host.receivedArgument("help"):
             print(self.agent_host.getUsage())
             exit(0)
 
+        # Wrappers for the Malmo framework; makes it easier to use these
         self.world_state = None
+
+        # ??????
         self.big_map = {}
         self.block_list = {}
         self.home = (25,60,25) #TODO: Set dynamically at spawn
