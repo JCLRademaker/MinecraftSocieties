@@ -4,7 +4,7 @@ from builtins import range
 from agent import Agent
 from random import randint, choice
 
-import superflat_world
+import superflatWorld
 import MalmoPython
 import os
 import sys
@@ -32,7 +32,7 @@ def dist(coordinatesA, coordinatesB):
 
 # Coordinates to randomly spawn a tree on
 # -- set up the mission --
-xml = superflat_world.ReturnMissionXML("\"true\"", superflat_world.MakeFarmLand(), superflat_world.ReturnMobTypes())
+xml = superflatWorld.ReturnMissionXML("\"true\"", superflatWorld.MakeFarmLand(), superflatWorld.ReturnMobTypes())
 
 # ==============================================================================
 # =========================== Initializing the Agent ===========================
