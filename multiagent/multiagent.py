@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from builtins import range
 from collections import namedtuple
 from tools import angles, spatial, inventory
@@ -11,7 +9,7 @@ import sys
 import time
 import json
 import math
-
+# malmoutils.fix_print()
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
 
@@ -22,29 +20,20 @@ InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 # Mapping from which resources can be gathered by which tools
 resourceToToolMapping = { u'log' : "iron_axe"}
 
-if sys.version_info[0] == 2:
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
-else:
-    import functools
-    print = functools.partial(print, flush=True)
-
 # TODO:
 # Why is this here?
 isCollecting = False
 isDroppingOff = False
 
+
 # ==============================================================================
 # ========================== The Generic Agent Object ==========================
 # ==============================================================================
 
-
-class Agent:
-    # ==============================================================================
-    # ===================== Initializers and starting missions =====================
-    # ==============================================================================
-    def __init__(self, missionXML, name = None):
-        self.my_mission = MalmoPython.MissionSpec(missionXML,True)
-        self.my_mission_record = MalmoPython.MissionRecordSpec()
+class MultiAgent:
+    def __init__(self, name, xml, role):
+        self.name = name
+        self.expId = ''
 
         # The Malmo host
         self.host = MalmoPython.AgentHost()
@@ -53,62 +42,65 @@ class Agent:
         self.world_state = None
 
         # Chat
-        if name:
-            self.chatter = chat.ChatClient(name)
+        self.chatter = chat.ChatClient(name)
+
+        # TODO:
+        # MAke htis niec
+        self.my_mission = MalmoPython.MissionSpec(xml,True)
+        self.my_mission_record = MalmoPython.MissionRecordSpec()
+        self.role = role
+
 
         # ??????
         self.big_map = {}
         self.block_list = {}
         self.home = (25,60,25) #TODO: Set dynamically at spawn
 
-    def Connect(self):
-        # Try and connect to a world
-        try:
-            self.host.parse( sys.argv )
-        except RuntimeError as e:
-            print('ERROR:',e)
-            print(self.host.getUsage())
-            exit(1)
 
-        #
-        if self.host.receivedArgument("help"):
-            print(self.host.getUsage())
-            exit(0)
+    def StartMission(self, clientPool):
+        """ """
 
-
-
-    def StartMission(self):
-        """ Try to connect to the server, starting the mission """
-        max_retries = 3
-        for retry in range(max_retries):
+        used_attempts = 0
+        max_attempts = 5
+        print("Calling startMission for role", self.role)
+        while True:
             try:
-                self.host.startMission( self.my_mission, self.my_mission_record )
+                # Attempt start:
+                self.host.startMission(self.my_mission, clientPool, self.my_mission_record, self.role, self.expId)
                 break
-            except RuntimeError as e:
-                if retry == max_retries - 1:
-                    print("Error starting mission:",e)
-                    exit(1)
-                else:
+            except MalmoPython.MissionException as e:
+                errorCode = e.details.errorCode
+                if errorCode == MalmoPython.MissionErrorCode.MISSION_SERVER_WARMING_UP:
+                    print("Server not quite ready yet - waiting...")
                     time.sleep(2)
-
-        # Loop until mission starts:
-        print("Waiting for the mission to start ", end=' ')
-
-        self.world_state = self.host.getWorldState()
-        while not self.world_state.has_mission_begun:
-            print(".", end="")
-            time.sleep(0.1)
-            self.world_state = self.host.getWorldState()
-
-            for error in self.world_state.errors:
-                print("Error:",error.text)
-
-        print()
-        print("Mission running ", end=' ')
+                elif errorCode == MalmoPython.MissionErrorCode.MISSION_INSUFFICIENT_CLIENTS_AVAILABLE:
+                    print("Not enough available Minecraft instances running.")
+                    used_attempts += 1
+                    if used_attempts < max_attempts:
+                        print("Will wait in case they are starting up.", max_attempts - used_attempts, "attempts left.")
+                        time.sleep(2)
+                elif errorCode == MalmoPython.MissionErrorCode.MISSION_SERVER_NOT_FOUND:
+                    print("Server not found - has the mission with role 0 been started yet?")
+                    used_attempts += 1
+                    if used_attempts < max_attempts:
+                        print("Will wait and retry.", max_attempts - used_attempts, "attempts left.")
+                        time.sleep(2)
+                else:
+                    print("Other error:", e.message)
+                    print("Waiting will not help here - bailing immediately.")
+                    exit(1)
+            if used_attempts == max_attempts:
+                print("All chances used up - bailing now.")
+                exit(1)
+        print("startMission called okay.")
 
 # ==============================================================================
 # ================================== Wrappers ==================================
 # ==============================================================================
+    def peekWorldState(self):
+        """ Peeks into the world state of the agent """
+        return self.host.peekWorldState()
+
     def SendCommand(self, command):
         """ Sends a singular command for the agent to execute """
         self.host.sendCommand(command)
@@ -163,7 +155,7 @@ class Agent:
             alert: optional argument, increases the priority of the message
             target: optional argument, the name of the targeted agent
         """
-        msg = self.chatter.StageMessage(message)
+        msg = self.chatter.StageMessage(message, alert = alert, target = target)
         self.SendCommand("chat " + msg)
 
     def GetAgentHost(self):
