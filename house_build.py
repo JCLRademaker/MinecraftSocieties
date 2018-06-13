@@ -95,36 +95,44 @@ agent.StartMission()
 while agent.is_mission_running():
    success, data = agent.Observe()
    if success:
-       inv = data[u'inventory'][0]
+
+       inv = data.get(u'inventory',0)
        #print(inv[u'type'])
        
        #select wood from inventory
-       if inv[u'type'] != u'log':
-          agent.SendCommand("hotbar.4 1")
-          agent.SendCommand("hotbar.4 0")                                       
+       #if inv[u'type'][0] != u'log':
+       agent.SendCommand("hotbar.4 1")
+       agent.SendCommand("hotbar.4 0")                                       
         
        grid = data.get(u'small_grid', 0)
+       
        index = 0
-       #get the indexes of a 3x3 grid
-       for g in grid:
-            index += 1 
-       index = index-1 #subtract 1 because the index will be 9 instead of 8 after the above for loop
-       #print(index)
-
+       
        #==============================
        #fill a 3x3 grid with wood (center should be empty as the agent stays inside)
        #==============================
 
-       #iterate through the 9 elements of the grid
+       #iterate through the edges of the grid
+       #ignore pos 4 (middle position where agent is)
        for elem in grid:
-          if index == 4:#ignore pos 4 (middle position where agent is)
-             index = index-1
-          
-          else:
+          if index == 0 or index == 2 or index == 6 or index == 8:
              if agent.MoveToRelBlock(index): #move and look at the block
                 agent.SendCommand("use 1")   #build wood inside block
-                index = index-1
-                #print(elem2+ str(index)+"\n")
+                index += 1
+          else:
+             index += 1
+       
+       #iterate through the 3 remaining positions
+       for elem in grid:
+          if index == 1 or index == 3 or index == 5 :
+             if agent.MoveToRelBlock(index): #move and look at the block
+                agent.SendCommand("use 1")   #build wood inside block
+                index += 1
+          else:
+             index += 1
+      
+
+                
 
 
 print()
