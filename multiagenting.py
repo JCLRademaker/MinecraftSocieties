@@ -2,9 +2,17 @@ from __future__ import print_function
 
 from builtins import range
 from collections import namedtuple
-from multiagent import multiserver
+from multiagent import multiserver, createAgentXML
+
+
 
 import time
+import MalmoPython
+
+
+# ==============================================================================
+# ===================== Define the Mutlo-agent Mission XML =====================
+# ==============================================================================
 
 # Coordinates to randomly spawn a tree on
 logX = -4
@@ -40,66 +48,27 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <ServerQuitFromTimeUp description="" timeLimitMs="35000"/>
       <ServerQuitWhenAnyAgentFinishes description=""/>
     </ServerHandlers>
-  </ServerSection>
-
-  <AgentSection mode="Survival">
-    <Name>Walker</Name>
-    <AgentStart>
-      <Placement x="0" y="227.0" z="0" pitch="0" yaw="0"/>
-    </AgentStart>
-    <AgentHandlers>
-        <!-- observations -->
-        <ObservationFromFullInventory flat="false"/>
-        <ObservationFromFullStats/>
-        <ObservationFromChat/>
-
-        <!-- movement -->
-	    <ContinuousMovementCommands/>
-        <InventoryCommands/>
-		<AbsoluteMovementCommands/>
-
-        <!-- Chat -->
-        <ChatCommands/>
-
-    </AgentHandlers>
-  </AgentSection>
-
-  <AgentSection mode="Survival">
-    <Name>Henk</Name>
-    <AgentStart>
-      <Placement x="0" y="228.0" z="0" pitch="0" yaw="0"/>
-    </AgentStart>
-    <AgentHandlers>
-        <!-- observations -->
-        <ObservationFromFullInventory flat="false"/>
-        <ObservationFromFullStats/>
-        <ObservationFromChat/>
-
-        <!-- movement -->
-	    <ContinuousMovementCommands/>
-        <InventoryCommands/>
-		<AbsoluteMovementCommands/>
-
-        <!-- Chat -->
-        <ChatCommands/>
-
-    </AgentHandlers>
-  </AgentSection>
-
-
+  </ServerSection> '''+ createAgentXML.CreateAgentXML("Walker") + createAgentXML.CreateAgentXML("Henk") +  '''
 </Mission>'''
 
+
+# ==============================================================================
+# =========================== Starting the Server ==============================
+# ==============================================================================
 agents = ["Walker", "Henk"]
 
 server = multiserver.MultiServer(xml)
 server.StartServer(agents)
 
+# ==============================================================================
+# ========================= Implementing the Server ============================
+# ==============================================================================
 server.agents[1].SendMessage("Hoi", target="Walker")
 
 while server.IsRunning():
     # Handle Agent 1:
-    obser = server.Observe()
-    chats = server.GetChat()
+    obser = server.Observe()    # Call all Agent.Observe
+    chats = server.GetChat()    # Call all Agent.GetChat
 
     for i, obs in enumerate(obser):
         if obs[0]:
