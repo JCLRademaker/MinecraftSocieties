@@ -404,3 +404,15 @@ class Agent:
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (coordinates[0] // 100, coordinates[2] // 100)
         return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]
+
+# ==============================================================================
+# ============================ Vision methods ==================================
+# ==============================================================================
+    """ Returns the object the agent is currently looking at and whether it is in range
+        Takes the u'LineOfSight' object from the data as parameter
+        Make sure that the agent has ObservationFromRay in it's agentHandlers
+    """
+    def getObjectFromRay(self, rayObservation):
+        object = rayObservation["type"]
+        inRange = rayObservation["inRange"]
+        return object, inRange
