@@ -61,6 +61,9 @@ class Agent:
         self.block_list = {}
         self.home = (25,60,25) #TODO: Set dynamically at spawn
 
+        # Task queue
+        self.taskList = list()
+
     def Connect(self):
         # Try and connect to a world
         try:

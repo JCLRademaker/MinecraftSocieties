@@ -58,7 +58,9 @@ def MakeDrawingDecorator():
     return drawing_decorator
 
 def ReturnMobTypes():
-    mobs = (''' Cow ''' + ''' Chicken ''' + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''')
+    # All passive mobs
+    mobs = (''' Bat ''' + ''' Chicken ''' + ''' Cow ''' + ''' Donkey ''' + ''' Horse ''' + ''' Mule '''
+            + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''' + ''' Llama ''' + ''' Wolf ''')
     return mobs
 
 # Mission XML
