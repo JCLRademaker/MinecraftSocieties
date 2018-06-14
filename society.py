@@ -17,7 +17,7 @@ import tasks
 # =========================== Initializing the world ===========================
 # ==============================================================================
 
-farmland = superflatWorld.MakeFarmLand()
+farmland = superflatWorld.MakeDrawingDecorator()
 mobs = superflatWorld.ReturnMobTypes()
 forceReset = "\"true\""
 xml = superflatWorld.ReturnMissionXML(forceReset, farmland, mobs)

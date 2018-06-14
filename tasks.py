@@ -28,7 +28,6 @@ def returnItems(itemtype, data, agent):
             # Adds items of a specified type to the chest
             agent.AddItemsToChest(data[u'inventoriesAvailable'], data[u'inventory'], "enderchest", itemtype)
             return True
-    
     return False
 
 # ==============================================================================

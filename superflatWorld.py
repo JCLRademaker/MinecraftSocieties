@@ -3,31 +3,31 @@
 # ------------------------------------------------------------------------------------------------ #
 
 from __future__ import print_function
-from builtins import range
-import MalmoPython
-import os
-import sys
 import random
-import time
-import xml.etree.ElementTree as ET
 
 # Create the whole <DrawingDecorator> section here
-def MakeFarmLand():
-    chest_x = 2
-    chest_z = 3
+def MakeDrawingDecorator():
+    chest_x = 10
+    chest_z = 11
 
     crop_types = ["beetroots", "carrots", "potatoes"]
-    block_type = "ender_chest"
+    block_type = "sand"
     drawing_decorator = "<DrawingDecorator>"
 
-    # First add the chest...
-    drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
-                         ' type="' + block_type + '"' + '/>'
+    # Place sand to avoid cluttering of spawning area with e.g. trees/grass
+    drawing_decorator += '<DrawCuboid x1="' + str(-20) + '" y1="' + str(59) + '" z1="' + str(-10) + \
+                         '" x2="' + str(20) + '" y2="' + str(59) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
+                         '"' + '/>'
+    # Clear the air :^)
+    block_type = "air"
+    drawing_decorator += '<DrawCuboid x1="' + str(-20) + '" y1="' + str(60) + '" z1="' + str(-10) + \
+                         '" x2="' + str(20) + '" y2="' + str(70) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
+                         '"' + '/>'
 
     # ...Then create the farm plot
-    for x in range(3, 8):
-        for y in range(3, 8):
-            if x == 5 and (y == 4 or y == 5 or y == 6):
+    for x in range(11, 16):
+        for y in range(11, 16):
+            if x == 13 and (y == 12 or y == 13 or y == 14):
                 # Water is needed to keep the farmland hydrated (hydrates max 4 tiles around 1 water)
                 block_type = "water"
                 drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
@@ -42,6 +42,17 @@ def MakeFarmLand():
                 drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(y) + '"' + \
                                      ' type="' + block_type + '"' + '/>'
 
+    # AAAAAAAAAHHHHH
+    block_type = "stone"
+    drawing_decorator += '<DrawSphere x="' + str(-50) + '" y="' + str(60) + '" z="' + str(50) + \
+                         '" radius="' + str(20) + '"' + ' type="' + block_type + '"' + '/>'
+
+    # Add the chest
+    block_type = "ender_chest"
+    drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
+                         ' type="' + block_type + '"' + '/>'
+
+    # ... And done!
     drawing_decorator += "</DrawingDecorator>"
 
     return drawing_decorator

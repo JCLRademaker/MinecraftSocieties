@@ -76,7 +76,7 @@ class Agent:
         max_retries = 3
         for retry in range(max_retries):
             try:
-                self.agent_host.startMission( self.my_mission, self.my_mission_record )
+                self.agent_host.startMission(self.my_mission, self.my_mission_record )
                 break
             except RuntimeError as e:
                 if retry == max_retries - 1:
@@ -98,7 +98,7 @@ class Agent:
                 print("Error:",error.text)
 
         print()
-        print("Mission running ", end=' ')
+        print("Mission running " + "\n", end=' ')
 
 # ==============================================================================
 # ================================== Wrappers ==================================
@@ -288,62 +288,65 @@ class Agent:
         return False
 
 # ==============================================================================
-# ============================ Adding to Inventory =============================
+# ================================= Inventory ==================================
 # ==============================================================================
-    def AddItemsToChest(self, available_inventories, super_inventory, other_inv_name, item_type):
+    def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-        other_inv = inventory.GetInventory(super_inventory, other_inv_name, InventoryObject)
+        o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
+
+        # Size can only be retrieved through the available inventories entry, which sucks.
+        o_inv_size = inventory.GetInventorySize(available_inventories, o_inv_name)
 
         # Only do this if the inventory is not full
-        if not inventory.IsInventoryFull(other_inv):
-            # Retrieve items of type [ ] from the inventory
-            item_slots = inventory.GetItemsFromInventory(agent_inv, item_type)
+        if not inventory.IsInventoryFull(o_inv, o_inv_size):
+            # Retrieve items of type [ ] from BOTH inventories.
+            item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
+            o_inv_slots = inventory.RetrieveItemOfType(o_inv, item_type)
 
-            # Size can only be retrieved through the available inventories entry, which sucks.
-            other_inv_size = inventory.GetInventorySize(available_inventories, other_inv_name)
-
-            # Items of type [ ] in both inventory and chest
-            if len(other_inv) > 0 and len(item_slots) >= 0:
-                # First combine if that's possible
-                item_slots = self.CombineSlots(other_inv, other_inv_name, item_slots)
+            # Items can possibly be combined with slots in chest
+            if len(o_inv_slots) > 0 and len(item_slots) > 0:
+                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
 
                 # Try and SWAP slots if there are still items left in the inventory
+                item_slots = [x for x in item_slots if x[1] > 0]
                 if len(item_slots) > 0:
-                    indices_used = inventory.FindSlotsInUse(other_inv, other_inv_name)
+                    indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
                     for slot in item_slots:
-                        self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, slot[0])
+                        item_slots, o_inv_slots = self.CombineSwapSlots(
+                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
             #  The chest is empty, add the items to the first (couple of) slot(s)
             elif len(item_slots) > 0:
                 indices_used = []
-                for item in item_slots:
-                    self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, item[0])
+                for slot in item_slots:
+                    item_slots, o_inv_slots = self.CombineSwapSlots(
+                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
 
-    def CombineSlots(self, other_inv, other_inv_name, item_slots):
+    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
         # If there are slots left to COMBINE...
         for slot in item_slots:
-            quantity_left = slot[1]
-            for item in other_inv:
-                if quantity_left > 0:
-                    # Always update the amount of items that is left (sadly has to be done manually, skeere tijden)
-                    command, quantity_left = inventory.CombineSlotsWithAgent(slot[0], other_inv_name, item, slot[1])
-                    if command != "":
-                        self.SendCommand(command)
-                else:
-                    slot = (-1, -1)
-        return [x for x in item_slots if x != (-1, -1)]
+            for item in o_inv_slots:
+                if item[1] < 64:
+                    # Update and keep track of the slots manually (sadly this has to be done because Malmo)
+                    command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+                        slot, item, item_slots, o_inv_slots, o_inv_name)
+                    self.SendCommand(command)
+        return item_slots, o_inv_slots
 
-    def CombineSwapSlots(self, indices_used, other_inv_name, other_inv_size, index):
-        # First try and combine with the last chest slot (could be that only
-        # 12 objects were added to the slot, and you want to fill that up first)
-        command = inventory.CombineSlotWithAgent(index, len(indices_used) - 1, other_inv_name)
-        self.SendCommand(command)
-
-        # Update the indices that are in use by the chest (sadly has to be done manually, skeere tijden).
-        command, indices_used = inventory.SwapSlotsWithAgent(index, other_inv_name, other_inv_size, indices_used)
-
-        # Swap item from inventory with (empty) item from chest
-        if command != "":
-            self.SendCommand(command)
+    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
+        # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
+        if len(indices_used) > 0:
+            index = len(o_inv_slots) - 1
+            if o_inv_slots[index][1] < 64:
+                command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
+                self.SendCommand(command)
+        # SWAP items with EMPTY slot(s)
+        if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
+            command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
+                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
+            if command != "":
+                self.SendCommand(command)
+        return item_slots, o_inv_slots
 
 # ==============================================================================
 # ============================ Maintaining a Map ===============================
@@ -356,7 +359,7 @@ class Agent:
         for i in range(13):
             for j in range(13):
                 block_value = worldmap[13 * i + j]
-                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2])- 6 + i)
+                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
                 self.UpdateMapBlock(block_value, block_position)
 
 

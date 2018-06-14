@@ -41,8 +41,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <Inventory>
           <InventoryItem slot="1" type="iron_axe"/>
           <InventoryItem slot="2" type="iron_pickaxe"/>
-		  <InventoryItem slot="3" type="log" quantity="63"/>
-		  <InventoryItem slot="4" type="log" quantity="12"/>
+		  <InventoryItem slot="3" type="log" quantity="13"/>
       </Inventory>
     </AgentStart>
     <AgentHandlers>
