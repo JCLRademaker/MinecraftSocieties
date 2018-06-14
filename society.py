@@ -36,6 +36,8 @@ agent.StartMission()
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
+        tasks.doCurrentTask(agent)
+		
         if u'LineOfSight' in data:
             object, inrange = agent.getObjectFromRay(data[u'LineOfSight'])
             print(str(object) + " " +  str(inrange))
