@@ -7,7 +7,6 @@ import malmoutils
 
 import time
 
-malmoutils.fix_print()
 
 class MultiServer:
     def __init__(self, xml):

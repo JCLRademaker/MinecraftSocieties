@@ -5,21 +5,32 @@ def CreateAgentXML(name, coords = "", inventory = ""):
     xml = '''<AgentSection mode="Survival">
           <Name>''' + name + '''</Name>
           <AgentStart>
-            ''' + placement + '''
+                ''' + placement + '''
+              <Inventory>
+                ''' + inventory + '''
+              </Inventory>
           </AgentStart>
           <AgentHandlers>
               <!-- observations -->
               <ObservationFromFullInventory flat="false"/>
               <ObservationFromFullStats/>
               <ObservationFromChat/>
+              <ObservationFromGrid>
+                  <Grid name="worldGrid" absoluteCoords="false">
+                  <min x="-6" y="0" z="-6"/>
+                  <max x="6" y="0" z="6"/>
+                  </Grid>
+              </ObservationFromGrid>
 
               <!-- movement -->
-      	    <ContinuousMovementCommands/>
-              <InventoryCommands/>
-      		<AbsoluteMovementCommands/>
+      	      <ContinuousMovementCommands/>
+      		  <AbsoluteMovementCommands/>
 
               <!-- Chat -->
               <ChatCommands/>
+
+              <!-- Inventory -->
+              <InventoryCommands/>
           </AgentHandlers>
         </AgentSection>
     '''
