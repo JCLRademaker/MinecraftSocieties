@@ -1,8 +1,5 @@
 *.pyc
-<<<<<<< HEAD
 *.so
 *.lib
 *.pyd
-=======
 .idea/workspace.xml
->>>>>>> 751624c8674e3b766bd44adf8621f97eca36f64e
