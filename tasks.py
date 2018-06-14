@@ -8,10 +8,10 @@ from agent import Agent
 """   Makes the given agent perform the current task from its tasklist
       Returns true when the task is done and removed from the queue
 """
-def doCurrentTask(agent):
+def doCurrentTask(agent, data):
     if len(agent.taskList) > 0: # Look for tasks
         task = agent.taskList[0]
-        if task[0](*task[1:]): #Perform the task and remove the task from the queue if its finished
+        if task[0](*task[1:], agent = agent, data = data): #Perform the task and remove the task from the queue if its finished
             del agent.taskList[0] 
             return True # Task is done and removed 
     return False #Not doing a task / task is not done yet 
@@ -31,7 +31,7 @@ def addTask(agent, task):
     Returns False when the task is not done yet
     This should deprecate the chesterReduced.py file
 """
-def returnItems(itemtype, data, agent):   
+def returnItems(itemtype, agent, data):   
     # Get the observed grid
     blocks = data.get(u'worldGrid', 0)
     
