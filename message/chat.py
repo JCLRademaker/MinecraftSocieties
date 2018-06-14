@@ -43,6 +43,8 @@ class ChatClient:
             else:
                 target = "other"
 
+            mess = mess.split(' ', 1)[1]
+
         priority = 2
         # if the message starts with "Alert:" it is a message with heightened importance
         if self.re_alert.match(message):
@@ -62,7 +64,7 @@ class ChatClient:
         msg = ""
 
         if not target == "":
-            msg = target
+            msg = "@"+target + " "
         elif alert:
             msg += "Alert: "
 

@@ -98,6 +98,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                     </AgentStart>
                     <AgentHandlers>
                         <ObservationFromFullInventory flat="false"/>
+                        <ObservationFromRay/>
                         <InventoryCommands/>
 	                 	<AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>

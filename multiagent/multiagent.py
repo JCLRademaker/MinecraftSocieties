@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from builtins import range
 from collections import namedtuple
 from tools import angles, spatial, inventory
@@ -11,7 +9,7 @@ import sys
 import time
 import json
 import math
-
+# malmoutils.fix_print()
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
 
@@ -22,29 +20,20 @@ InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 # Mapping from which resources can be gathered by which tools
 resourceToToolMapping = { u'log' : "iron_axe"}
 
-if sys.version_info[0] == 2:
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
-else:
-    import functools
-    print = functools.partial(print, flush=True)
-
 # TODO:
 # Why is this here?
 isCollecting = False
 isDroppingOff = False
 
+
 # ==============================================================================
 # ========================== The Generic Agent Object ==========================
 # ==============================================================================
 
-
-class Agent:
-    # ==============================================================================
-    # ===================== Initializers and starting missions =====================
-    # ==============================================================================
-    def __init__(self, missionXML, name = None):
-        self.my_mission = MalmoPython.MissionSpec(missionXML,True)
-        self.my_mission_record = MalmoPython.MissionRecordSpec()
+class MultiAgent:
+    def __init__(self, name, xml, role):
+        self.name = name
+        self.expId = ''
 
         # The Malmo host
         self.host = MalmoPython.AgentHost()
@@ -53,62 +42,65 @@ class Agent:
         self.world_state = None
 
         # Chat
-        if name:
-            self.chatter = chat.ChatClient(name)
+        self.chatter = chat.ChatClient(name)
+
+        # TODO:
+        # MAke htis niec
+        self.my_mission = MalmoPython.MissionSpec(xml,True)
+        self.my_mission_record = MalmoPython.MissionRecordSpec()
+        self.role = role
+
 
         # ??????
         self.big_map = {}
         self.block_list = {}
         self.home = (25,60,25) #TODO: Set dynamically at spawn
 
-    def Connect(self):
-        # Try and connect to a world
-        try:
-            self.host.parse( sys.argv )
-        except RuntimeError as e:
-            print('ERROR:',e)
-            print(self.host.getUsage())
-            exit(1)
 
-        #
-        if self.host.receivedArgument("help"):
-            print(self.host.getUsage())
-            exit(0)
+    def StartMission(self, clientPool):
+        """ """
 
-
-
-    def StartMission(self):
-        """ Try to connect to the server, starting the mission """
-        max_retries = 3
-        for retry in range(max_retries):
+        used_attempts = 0
+        max_attempts = 5
+        print("Calling startMission for role", self.role)
+        while True:
             try:
-                self.host.startMission( self.my_mission, self.my_mission_record )
+                # Attempt start:
+                self.host.startMission(self.my_mission, clientPool, self.my_mission_record, self.role, self.expId)
                 break
-            except RuntimeError as e:
-                if retry == max_retries - 1:
-                    print("Error starting mission:",e)
-                    exit(1)
-                else:
+            except MalmoPython.MissionException as e:
+                errorCode = e.details.errorCode
+                if errorCode == MalmoPython.MissionErrorCode.MISSION_SERVER_WARMING_UP:
+                    print("Server not quite ready yet - waiting...")
                     time.sleep(2)
-
-        # Loop until mission starts:
-        print("Waiting for the mission to start ", end=' ')
-
-        self.world_state = self.host.getWorldState()
-        while not self.world_state.has_mission_begun:
-            print(".", end="")
-            time.sleep(0.1)
-            self.world_state = self.host.getWorldState()
-
-            for error in self.world_state.errors:
-                print("Error:",error.text)
-
-        print()
-        print("Mission running " + "\n", end=' ')
+                elif errorCode == MalmoPython.MissionErrorCode.MISSION_INSUFFICIENT_CLIENTS_AVAILABLE:
+                    print("Not enough available Minecraft instances running.")
+                    used_attempts += 1
+                    if used_attempts < max_attempts:
+                        print("Will wait in case they are starting up.", max_attempts - used_attempts, "attempts left.")
+                        time.sleep(2)
+                elif errorCode == MalmoPython.MissionErrorCode.MISSION_SERVER_NOT_FOUND:
+                    print("Server not found - has the mission with role 0 been started yet?")
+                    used_attempts += 1
+                    if used_attempts < max_attempts:
+                        print("Will wait and retry.", max_attempts - used_attempts, "attempts left.")
+                        time.sleep(2)
+                else:
+                    print("Other error:", e.message)
+                    print("Waiting will not help here - bailing immediately.")
+                    exit(1)
+            if used_attempts == max_attempts:
+                print("All chances used up - bailing now.")
+                exit(1)
+        print("startMission called okay.")
 
 # ==============================================================================
 # ================================== Wrappers ==================================
 # ==============================================================================
+    def peekWorldState(self):
+        """ Peeks into the world state of the agent """
+        return self.host.peekWorldState()
+
     def SendCommand(self, command):
         """ Sends a singular command for the agent to execute """
         self.host.sendCommand(command)
@@ -163,7 +155,7 @@ class Agent:
             alert: optional argument, increases the priority of the message
             target: optional argument, the name of the targeted agent
         """
-        msg = self.chatter.StageMessage(message)
+        msg = self.chatter.StageMessage(message, alert = alert, target = target)
         self.SendCommand("chat " + msg)
 
     def GetAgentHost(self):
@@ -298,65 +290,62 @@ class Agent:
         return False
 
 # ==============================================================================
-# ================================= Inventory ==================================
+# ============================ Adding to Inventory =============================
 # ==============================================================================
-    def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
+    def AddItemsToChest(self, available_inventories, super_inventory, other_inv_name, item_type):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-        o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
-
-        # Size can only be retrieved through the available inventories entry, which sucks.
-        o_inv_size = inventory.GetInventorySize(available_inventories, o_inv_name)
+        other_inv = inventory.GetInventory(super_inventory, other_inv_name, InventoryObject)
 
         # Only do this if the inventory is not full
-        if not inventory.IsInventoryFull(o_inv, o_inv_size):
-            # Retrieve items of type [ ] from BOTH inventories.
-            item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
-            o_inv_slots = inventory.RetrieveItemOfType(o_inv, item_type)
+        if not inventory.IsInventoryFull(other_inv):
+            # Retrieve items of type [ ] from the inventory
+            item_slots = inventory.GetItemsFromInventory(agent_inv, item_type)
 
-            # Items can possibly be combined with slots in chest
-            if len(o_inv_slots) > 0 and len(item_slots) > 0:
-                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
+            # Size can only be retrieved through the available inventories entry, which sucks.
+            other_inv_size = inventory.GetInventorySize(available_inventories, other_inv_name)
+
+            # Items of type [ ] in both inventory and chest
+            if len(other_inv) > 0 and len(item_slots) >= 0:
+                # First combine if that's possible
+                item_slots = self.CombineSlots(other_inv, other_inv_name, item_slots)
 
                 # Try and SWAP slots if there are still items left in the inventory
-                item_slots = [x for x in item_slots if x[1] > 0]
                 if len(item_slots) > 0:
-                    indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
+                    indices_used = inventory.FindSlotsInUse(other_inv, other_inv_name)
                     for slot in item_slots:
-                        item_slots, o_inv_slots = self.CombineSwapSlots(
-                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
+                        self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, slot[0])
             #  The chest is empty, add the items to the first (couple of) slot(s)
             elif len(item_slots) > 0:
                 indices_used = []
-                for slot in item_slots:
-                    item_slots, o_inv_slots = self.CombineSwapSlots(
-                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
+                for item in item_slots:
+                    self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, item[0])
 
-    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
+    def CombineSlots(self, other_inv, other_inv_name, item_slots):
         # If there are slots left to COMBINE...
         for slot in item_slots:
-            for item in o_inv_slots:
-                if item[1] < 64:
-                    # Update and keep track of the slots manually (sadly this has to be done because Malmo)
-                    command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                        slot, item, item_slots, o_inv_slots, o_inv_name)
-                    self.SendCommand(command)
-        return item_slots, o_inv_slots
+            quantity_left = slot[1]
+            for item in other_inv:
+                if quantity_left > 0:
+                    # Always update the amount of items that is left (sadly has to be done manually, skeere tijden)
+                    command, quantity_left = inventory.CombineSlotsWithAgent(slot[0], other_inv_name, item, slot[1])
+                    if command != "":
+                        self.SendCommand(command)
+                else:
+                    slot = (-1, -1)
+        return [x for x in item_slots if x != (-1, -1)]
 
-    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
-        # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
-        if len(indices_used) > 0:
-            index = len(o_inv_slots) - 1
-            if o_inv_slots[index][1] < 64:
-                command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
-                self.SendCommand(command)
-        # SWAP items with EMPTY slot(s)
-        if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
-            command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
-                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
-            if command != "":
-                self.SendCommand(command)
-        return item_slots, o_inv_slots
+    def CombineSwapSlots(self, indices_used, other_inv_name, other_inv_size, index):
+        # First try and combine with the last chest slot (could be that only
+        # 12 objects were added to the slot, and you want to fill that up first)
+        command = inventory.CombineSlotWithAgent(index, len(indices_used) - 1, other_inv_name)
+        self.SendCommand(command)
+
+        # Update the indices that are in use by the chest (sadly has to be done manually, skeere tijden).
+        command, indices_used = inventory.SwapSlotsWithAgent(index, other_inv_name, other_inv_size, indices_used)
+
+        # Swap item from inventory with (empty) item from chest
+        if command != "":
+            self.SendCommand(command)
 
 # ==============================================================================
 # ============================ Maintaining a Map ===============================
@@ -369,7 +358,7 @@ class Agent:
         for i in range(13):
             for j in range(13):
                 block_value = worldmap[13 * i + j]
-                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
+                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2])- 6 + i)
                 self.UpdateMapBlock(block_value, block_position)
 
 
@@ -407,15 +396,3 @@ class Agent:
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (coordinates[0] // 100, coordinates[2] // 100)
         return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]
-
-# ==============================================================================
-# ============================ Vision methods ==================================
-# ==============================================================================
-    """ Returns the object the agent is currently looking at and whether it is in range
-        Takes the u'LineOfSight' object from the data as parameter
-        Make sure that the agent has ObservationFromRay in it's agentHandlers
-    """
-    def getObjectFromRay(self, rayObservation):
-        object = rayObservation["type"]
-        inRange = rayObservation["inRange"]
-        return object, inRange
