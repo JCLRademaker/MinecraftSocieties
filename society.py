@@ -28,7 +28,7 @@ xml = superflatWorld.ReturnMissionXML(forceReset, farmland, mobs)
 
 agent = Agent(xml)
 agent.StartMission()
-tasks.addTask(agent, (tasks.returnItems, u'log'))
+agent.addTask((tasks.returnItems, u'log'))
 
 # ==============================================================================
 # =========================== Implementing the Agent ===========================
@@ -37,7 +37,7 @@ tasks.addTask(agent, (tasks.returnItems, u'log'))
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
-        tasks.doCurrentTask(agent, data)
+        agent.doCurrentTask()
 		
         if u'LineOfSight' in data:
             object, inrange = agent.getObjectFromRay(data[u'LineOfSight'])

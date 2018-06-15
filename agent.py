@@ -131,15 +131,15 @@ class Agent:
 
         if self.world_state.number_of_observations_since_last_state > 0:
             msg = self.world_state.observations[-1].text
-            data = json.loads(msg)
+            self.data = json.loads(msg)
             self.Position = (
-                data.get(u'XPos', 0),
-                data.get(u'YPos', 0),
-                data.get(u'ZPos', 0),
-                data.get(u'Yaw',  0),
-                data.get(u'Pitch',0)
+                self.data.get(u'XPos', 0),
+                self.data.get(u'YPos', 0),
+                self.data.get(u'ZPos', 0),
+                self.data.get(u'Yaw',  0),
+                self.data.get(u'Pitch',0)
             )
-            return True, data
+            return True, self.data
 
         return False, False
 
@@ -422,3 +422,25 @@ class Agent:
         object = rayObservation["type"]
         inRange = rayObservation["inRange"]
         return object, inRange
+        
+# ==============================================================================
+# ============================ Task execution ==================================
+# ==============================================================================
+
+    """   Makes the given agent perform the current task from its tasklist
+      Returns true when the task is done and removed from the queue
+    """
+    def doCurrentTask(self):
+        if len(self.taskList) > 0: # Look for tasks
+            task = self.taskList[0]
+            if task[0](*task[1:], agent = self): #Perform the task and remove the task from the queue if its finished
+                del self.taskList[0] 
+                return True # Task is done and removed 
+        return False #Not doing a task / task is not done yet 
+
+    """
+      Add a task to the agents task list
+	  Tasks are in the form of (functionCall(), paramA, paramB)
+    """
+    def addTask(self, task):
+         self.taskList.append(task)

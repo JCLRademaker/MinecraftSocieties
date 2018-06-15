@@ -1,28 +1,5 @@
 from __future__ import print_function
 from agent import Agent
-
-# ==============================================================================
-# ============================ Do tasks from queue =============================
-# ==============================================================================
-
-"""   Makes the given agent perform the current task from its tasklist
-      Returns true when the task is done and removed from the queue
-"""
-def doCurrentTask(agent, data):
-    if len(agent.taskList) > 0: # Look for tasks
-        task = agent.taskList[0]
-        if task[0](*task[1:], agent = agent, data = data): #Perform the task and remove the task from the queue if its finished
-            del agent.taskList[0] 
-            return True # Task is done and removed 
-    return False #Not doing a task / task is not done yet 
-
-"""
-      Add a task to the agents task list
-	  Tasks are in the form of (functionCall(), paramA, paramB)
-"""
-def addTask(agent, task):
-    agent.taskList.append(task)
-		
 # ==============================================================================
 # ============================ Return items ====================================
 # ==============================================================================
@@ -31,9 +8,9 @@ def addTask(agent, task):
     Returns False when the task is not done yet
     This should deprecate the chesterReduced.py file
 """
-def returnItems(itemtype, agent, data):   
+def returnItems(itemtype, agent):   
     # Get the observed grid
-    blocks = data.get(u'worldGrid', 0)
+    blocks = agent.data.get(u'worldGrid', 0)
     
     # Scan for chests: 
     index = 0
@@ -45,9 +22,10 @@ def returnItems(itemtype, agent, data):
     # Move to the chest and use it
     if agent.MoveToRelBlock(index):
         agent.SendCommand("use 1")
-        if u'inventoriesAvailable' in data:
+        if u'inventoriesAvailable' in agent.data:
             # Adds items of a specified type to the chest
-            agent.AddItemsToChest(data[u'inventoriesAvailable'], data[u'inventory'], "enderchest", itemtype)
+            agent.AddItemsToChest(agent.data[u'inventoriesAvailable'], agent.data[u'inventory'], "enderchest", itemtype)
+            agent.SendCommand("use 0")      
             return True
     return False
 
