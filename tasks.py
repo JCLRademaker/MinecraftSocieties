@@ -28,6 +28,10 @@ def returnItems(itemtype, agent):
             agent.SendCommand("use 0")      
             return True
     return False
+  
+""" Move the agent to its specified home coordinates"""   
+def goHome(agent):
+    return agent.MoveLookAtBlock(agent.home)    
 
 # ==============================================================================
 # ============================ Gather items ====================================
