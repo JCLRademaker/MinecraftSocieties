@@ -36,6 +36,11 @@ def goHome(agent):
 # ==============================================================================
 # ============================ Gather items ====================================
 # ==============================================================================
+""" Looks up a resource location in its memory and moves there"""
+def moveToResource(resource, agent):
+    resourceList = agent.block_list[resource]
+    location = resourceList[0]
+    return agent.MoveLookAtBlock(location)    
 
 # ==============================================================================
 # ============================== Scout =========================================
