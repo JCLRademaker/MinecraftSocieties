@@ -73,7 +73,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                 <ServerSection>
                     <ServerInitialConditions>
                         <Time>
-                            <StartTime>1000</StartTime>
+                            <StartTime>6000</StartTime>
                             <AllowPassageOfTime>false</AllowPassageOfTime>
                         </Time>
                         <Weather>clear</Weather>
@@ -86,7 +86,6 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                 </ServerSection>
-
                 <AgentSection mode="Survival">
                     <Name>Adam</Name>
                     <AgentStart>
@@ -94,26 +93,26 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <Inventory>
                             <InventoryItem slot="0" type="diamond_pickaxe"/>
                             <InventoryItem slot="1" type="diamond_hoe"/>
-                            <InventoryItem slot="2" type="iron_axe"/>
-                            <InventoryItem slot="4" type="log" quantity="12"/>
+                            <InventoryItem slot="2" type="log" quantity="12"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
                         <ObservationFromFullInventory flat="false"/>
                         <ObservationFromRay/>
                         <InventoryCommands/>
-	                 	<AbsoluteMovementCommands/>                    
+                        <AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>
                         <ContinuousMovementCommands turnSpeedDegs="180"/>
-	                   	<ObservationFromNearbyEntities>
-		                    <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+                        <ObservationFromNearbyEntities>
+                            <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
                         </ObservationFromNearbyEntities>
                         <ObservationFromGrid>
                             <Grid name="worldGrid" absoluteCoords="false">
-                            <min x="-6" y="0" z="-6"/>
-                            <max x="6" y="0" z="6"/>
+                                <min x="-6" y="0" z="-6"/>
+                                <max x="6" y="0" z="6"/>
                             </Grid>
                         </ObservationFromGrid>
+                        <ChatCommands/>
                     </AgentHandlers>
                 </AgentSection>
             </Mission>'''

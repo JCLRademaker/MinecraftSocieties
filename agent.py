@@ -106,6 +106,13 @@ class Agent:
             for error in self.world_state.errors:
                 print("Error:",error.text)
 
+        # Set initial world things
+        self.SendCommand('chat /gamemode survival')
+        self.SendCommand('chat /gamerule naturalRegeneration false')
+        self.SendCommand('chat /effect @p minecraft:hunger 4 200')
+        # self.SendCommand('chat /effect @p 23 9999 0 false')
+        # self.SendCommand('chat /effect @p 17 9999 1 false')
+
         print()
         print("Mission running " + "\n", end=' ')
 
