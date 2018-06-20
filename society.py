@@ -28,6 +28,10 @@ xml = superflatWorld.ReturnMissionXML(forceReset, farmland, mobs)
 
 agent = Agent(xml)
 agent.StartMission()
+agent.addTask((tasks.goToPosition, (-20, 61, -20)))
+agent.addTask((tasks.harvestResource, u'log'))
+agent.addTask((tasks.collectResource, "log"))
+agent.addTask((tasks.goToPosition, agent.home))
 agent.addTask((tasks.returnItems, u'log'))
 
 # ==============================================================================
@@ -37,7 +41,7 @@ agent.addTask((tasks.returnItems, u'log'))
 while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
-        print("running")
+        agent.doCurrentTask()
         # agent.doCurrentTask()
 
 print()

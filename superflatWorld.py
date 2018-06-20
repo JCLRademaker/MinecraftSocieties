@@ -51,6 +51,9 @@ def MakeDrawingDecorator():
     block_type = "ender_chest"
     drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
                          ' type="' + block_type + '"' + '/>'
+    # Test log                     
+    drawing_decorator +=  '<DrawBlock x="' + str(-20) + '" y="' + str(60) + '" z="' + str(-20) + '"' + \
+                         ' type="' + "log" + '"' + '/>'
 
     # ... And done!
     drawing_decorator += "</DrawingDecorator>"
@@ -93,7 +96,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <Inventory>
                             <InventoryItem slot="0" type="diamond_pickaxe"/>
                             <InventoryItem slot="1" type="diamond_hoe"/>
-                            <InventoryItem slot="2" type="log" quantity="12"/>
+                            <InventoryItem slot="2" type="wooden_axe"/>                           
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>

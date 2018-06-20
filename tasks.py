@@ -1,5 +1,14 @@
 from __future__ import print_function
 from agent import Agent
+from collections import namedtuple
+
+# Named tuple consisting of info on entities
+EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
+
+# Create a named tuple type for the inventory contents.
+InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity, inventory, index')
+InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
+
 # ==============================================================================
 # ============================ Return items ====================================
 # ==============================================================================
@@ -33,6 +42,9 @@ def returnItems(itemtype, agent):
 def goHome(agent):
     return agent.MoveLookAtBlock(agent.home)    
 
+def goToPosition(location, agent):
+    return agent.MoveLookAtBlock(location)
+
 # ==============================================================================
 # ============================ Gather items ====================================
 # ==============================================================================
@@ -48,16 +60,16 @@ If there is none, target will be false and the task is done
 If there is, walk towards it and harvest it
 """
 def harvestResource(resource, agent):
-    if "world_grid" in agent.data:
-        blocks = agent.data.get(u'world_grid', 0)
+    if "worldGrid" in agent.data:
+        blocks = agent.data.get(u'worldGrid', 0)
         index = 0
         target = False
-        
+                
         # Scout the grid for the given resource
         for b in blocks:
             index += 1
             if b == resource:   
-                target = True            
+                target = True       
                 if u'inventory' in agent.data:
                     inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
                     agent.EquipToolForResource(resource, inv)
