@@ -1,5 +1,4 @@
 from __future__ import print_function
-from agent import Agent
 from collections import namedtuple
 
 # Named tuple consisting of info on entities
