@@ -40,12 +40,6 @@ while agent.is_mission_running():
         print("running")
         # agent.doCurrentTask()
 
-      #  if u'LineOfSight' in data:
-            # object, inrange = agent.getObjectFromRay(data[u'LineOfSight'])
-            # print(str(object) + " " + str(inrange))
-       # else:
-            # print("nothing here")
-
 print()
 print("Mission ended")
 # Mission has ended.

@@ -20,7 +20,7 @@ InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity
 InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
 # Mapping from which resources can be gathered by which tools
-resourceToToolMapping = { u'log' : "iron_axe"}
+resourceToToolMapping = { u'log' : "wooden_axe"}
 
 if sys.version_info[0] == 2:
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
@@ -425,10 +425,14 @@ class Agent:
         Takes the u'LineOfSight' object from the data as parameter
         Make sure that the agent has ObservationFromRay in it's agentHandlers
     """
-    def getObjectFromRay(self, rayObservation):
-        object = rayObservation["type"]
-        inRange = rayObservation["inRange"]
-        return object, inRange
+    def getObjectFromRay(self):
+        if u'LineOfSight' in self.data: 
+            rayObservation = self.data[u'LineOfSight']
+            object = rayObservation["type"]
+            inRange = rayObservation["inRange"]
+            return object, inRange
+        else:
+            return False, False
         
 # ==============================================================================
 # ============================ Task execution ==================================
