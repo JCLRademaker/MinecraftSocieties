@@ -6,7 +6,6 @@ from agent import Agent
 """ Return items of given type to a chest
     Returns True when the task is done
     Returns False when the task is not done yet
-    This should deprecate the chesterReduced.py file
 """
 def returnItems(itemtype, agent):   
     # Get the observed grid
@@ -31,7 +30,15 @@ def returnItems(itemtype, agent):
   
 """ Move the agent to its specified home coordinates"""   
 def goHome(agent):
-    return agent.MoveLookAtBlock(agent.home)    
+    return agent.MoveLookAtBlock(agent.home)
+
+# ==============================================================================
+# ============================= Craft items ====================================
+# ==============================================================================
+""" Try to craft an item """
+def tryCraftItem(itemtype, agent):
+    inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")
+    return agent.TryCraftItem(inventory, itemtype)
 
 # ==============================================================================
 # ============================ Gather items ====================================

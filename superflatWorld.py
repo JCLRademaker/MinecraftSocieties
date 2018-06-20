@@ -81,7 +81,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <AllowedMobs>''' + mob_types + '''</AllowedMobs>
                     </ServerInitialConditions>
                     <ServerHandlers>
-                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;35;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
+                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
                         <ServerQuitFromTimeUp timeLimitMs="100000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
@@ -91,9 +91,9 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                     <AgentStart>
                         <Placement x="0" y="61" z="0" pitch="0" yaw="0"/>
                         <Inventory>
-                            <InventoryItem slot="0" type="diamond_pickaxe"/>
-                            <InventoryItem slot="1" type="diamond_hoe"/>
-                            <InventoryItem slot="2" type="log" quantity="12"/>
+                            <InventoryItem slot="0" type="planks" quantity="1"/>
+                            <InventoryItem slot="1" type="stick" quantity="2"/>
+                            <InventoryItem slot="2" type="cobblestone" quantity="3"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
@@ -103,6 +103,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>
                         <ContinuousMovementCommands turnSpeedDegs="180"/>
+                        <SimpleCraftCommands/>
                         <ObservationFromNearbyEntities>
                             <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
                         </ObservationFromNearbyEntities>

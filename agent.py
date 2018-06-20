@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from builtins import range
 from collections import namedtuple
-from tools import angles, spatial, inventory
+from tools import angles, spatial, inventory, crafting
 from message import chat
 
 import MalmoPython
@@ -310,6 +310,12 @@ class Agent:
 # ==============================================================================
 # ================================= Inventory ==================================
 # ==============================================================================
+    def GetInventory(self, super_inventory, inventory_name):
+        return inventory.GetInventory(super_inventory, inventory_name, InventoryObject)
+
+    def GetAmountOfType(self, _inventory, item_type):
+        return inventory.GetAmountOfType(_inventory, item_type)
+
     def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
         o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
@@ -367,6 +373,27 @@ class Agent:
             if command != "":
                 self.SendCommand(command)
         return item_slots, o_inv_slots
+
+# ==============================================================================
+# ================================ Crafting ====================================
+# ==============================================================================
+    def TryCraftItem(self, _inventory, recipe_name):
+        item_crafted = False
+        can_craft, craftable_elements = crafting.IsRecipeInInventory(_inventory, recipe_name)
+
+        if can_craft and len(craftable_elements) > 0:
+            for element in craftable_elements:
+                self.SendCommand("craft " + str(element))
+            self.SendCommand("craft " + recipe_name)
+            item_crafted = True
+        elif can_craft:
+            self.SendCommand("craft " + recipe_name)
+        else:
+            missing_elements = crafting.GetMissingElements(_inventory, recipe_name)
+            # return missing_elements
+
+        if item_crafted:
+            return True
 
 # ==============================================================================
 # ============================ Maintaining a Map ===============================
@@ -441,7 +468,9 @@ class Agent:
         if len(self.taskList) > 0: # Look for tasks
             task = self.taskList[0]
             if task[0](*task[1:], agent = self): #Perform the task and remove the task from the queue if its finished
-                del self.taskList[0] 
+                print(str(task[0]) + " completed.")
+                del self.taskList[0]
+                time.sleep(0.5)
                 return True # Task is done and removed 
         return False #Not doing a task / task is not done yet 
 

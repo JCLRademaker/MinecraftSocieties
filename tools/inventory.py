@@ -29,6 +29,12 @@ def GetInventorySize(available_inventories, inventory_name):
             inv_size = inv[u'size']
     return inv_size
 
+def GetAmountOfType(inventory, item_type):
+    quantity = 0
+    for item in inventory:
+        if item.type == item_type:
+            quantity += item.quantity
+    return quantity
 
 # Retrieve item from inventory with item type (if possible)
 def RetrieveItemOfType(inventory, item_type, amount_stacks=None):
