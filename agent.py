@@ -11,6 +11,7 @@ import sys
 import time
 import json
 import math
+import tasks
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -20,7 +21,7 @@ InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity
 InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
 # Mapping from which resources can be gathered by which tools
-resourceToToolMapping = { u'log' : "iron_axe"}
+resourceToToolMapping = { u'log' : "wooden_axe"}
 
 if sys.version_info[0] == 2:
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
@@ -59,7 +60,7 @@ class Agent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (25,60,25) #TODO: Set dynamically at spawn
+        self.home = (0,61,0) #TODO: Set dynamically at spawn
 
         # Task queue
         self.taskList = list()
@@ -452,10 +453,14 @@ class Agent:
         Takes the u'LineOfSight' object from the data as parameter
         Make sure that the agent has ObservationFromRay in it's agentHandlers
     """
-    def getObjectFromRay(self, rayObservation):
-        object = rayObservation["type"]
-        inRange = rayObservation["inRange"]
-        return object, inRange
+    def getObjectFromRay(self):
+        if u'LineOfSight' in self.data: 
+            rayObservation = self.data[u'LineOfSight']
+            object = rayObservation["type"]
+            inRange = rayObservation["inRange"]
+            return object, inRange
+        else:
+            return False, False
         
 # ==============================================================================
 # ============================ Task execution ==================================
@@ -480,3 +485,28 @@ class Agent:
     """
     def addTask(self, task):
          self.taskList.append(task)
+
+         
+# ==============================================================================
+# ============================ High level task wrappers ========================
+# ==============================================================================
+    """
+    Adds all the subtasks for woodcutting to the agents tasklist
+    """
+    def addWoodcutterTask(self):
+        self.addTask((tasks.moveToResource, u'log'))
+        self.addTask((tasks.harvestResource, u'log'))
+        self.addTask((tasks.collectResource, "log"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'log'))
+    """
+    Adds all the subtasks for stonecutting to the agents tasklist
+    """
+    def addStonecutterTask(self):
+        self.addTask((tasks.moveToResource, u'stone'))
+        self.addTask((tasks.harvestResource, u'stone'))
+        self.addTask((tasks.collectResource, "cobblestone"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'cobblestone'))
+    
+        

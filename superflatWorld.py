@@ -51,6 +51,9 @@ def MakeDrawingDecorator():
     block_type = "ender_chest"
     drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
                          ' type="' + block_type + '"' + '/>'
+    # Test log                     
+    drawing_decorator +=  '<DrawBlock x="' + str(-20) + '" y="' + str(60) + '" z="' + str(-20) + '"' + \
+                         ' type="' + "log" + '"' + '/>'
 
     # ... And done!
     drawing_decorator += "</DrawingDecorator>"
