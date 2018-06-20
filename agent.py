@@ -11,6 +11,7 @@ import sys
 import time
 import json
 import math
+import tasks
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -455,3 +456,28 @@ class Agent:
     """
     def addTask(self, task):
          self.taskList.append(task)
+
+         
+# ==============================================================================
+# ============================ High level task wrappers ========================
+# ==============================================================================
+    """
+    Adds all the subtasks for woodcutting to the agents tasklist
+    """
+    def addWoodcutterTask(self):
+        self.addTask((tasks.moveToResource, u'log'))
+        self.addTask((tasks.harvestResource, u'log'))
+        self.addTask((tasks.collectResource, "log"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'log'))
+    """
+    Adds all the subtasks for stonecutting to the agents tasklist
+    """
+    def addStonecutterTask(self):
+        self.addTask((tasks.moveToResource, u'stone'))
+        self.addTask((tasks.harvestResource, u'stone'))
+        self.addTask((tasks.collectResource, "cobblestone"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'cobblestone'))
+    
+        
