@@ -55,7 +55,7 @@ class Movement:
 
             if di > distance:
                 sp = min(1, di/10)
-                self.SendCommand("move "+ str(sp))
+                self.SendCommand("move " + str(sp))
             else:
                 self.movd = True
 
@@ -88,6 +88,7 @@ class Movement:
     def TryTurnTo(self, targetLocation, maxAngle = 5):
         """ Turn in the XZ plane towards the location """
         # Calculate the actual angle
+        # print(str(self.agent.Position))
         deltaYaw = angles.CalcDeltaYaw(self.agent.Position, targetLocation)
 
         # If the agent's direction is within 5 degrees of the location it is fine

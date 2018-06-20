@@ -3,6 +3,7 @@ import random
 from collections import namedtuple
 from multiagent import multiserver, createAgentXML
 import time
+import tasks
 import MalmoPython
 
 
@@ -91,7 +92,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                 <ServerQuitFromTimeUp timeLimitMs="100000"/>
                 <ServerQuitWhenAnyAgentFinishes/>
             </ServerHandlers>
-        </ServerSection>''' + createAgentXML.CreateAgentXML("Walker") + createAgentXML.CreateAgentXML("Henk") + '''
+        </ServerSection>''' + createAgentXML.CreateAgentXML("Jan") + createAgentXML.CreateAgentXML("Henk") + '''
     </Mission>'''
     return xml
 
@@ -99,7 +100,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
 # ==============================================================================
 # =========================== Starting the Server ==============================
 # ==============================================================================
-agents = ["Walker", "Henk"]
+agents = ["Jan", "Henk"]
 
 farmland = MakeDrawingDecorator()
 mobs = ReturnMobTypes()
@@ -108,25 +109,31 @@ forceReset = "\"true\""
 server = multiserver.MultiServer(ReturnMissionXML(forceReset, farmland, mobs))
 server.StartServer(agents)
 
+# TEST
+server.agents[0].addTask((tasks.goToPosition, (-20, 61, -20)))
+server.agents[1].addTask((tasks.goToPosition, (-25, 60, -25)))
+
 # ==============================================================================
 # ========================= Implementing the Server ============================
 # ==============================================================================
-server.agents[1].SendMessage("Hoi", target="Walker")
+server.agents[1].SendMessage("Hoi", target="Jan")
 
 while server.IsRunning():
     # Handle Agent 1:
     obser = server.Observe()    # Call all Agent.Observe
     chats = server.GetChat()    # Call all Agent.GetChat
 
+    # TEST
+    server.agents[0].doCurrentTask()
+    server.agents[1].doCurrentTask()
+
     for i, obs in enumerate(obser):
         if obs[0]:
             # Get HP
-            print(str(obs[1][u'Name']) + " has " + str(obs[1][u'Life']) + " life")
+            # print(str(obs[1][u'Name']) + " has " + str(obs[1][u'Life']) + " life")
 
             # Get FOOD
-            print(str(obs[1][u'Name']) + " has " + str(obs[1][u'Food']) + " hunger")
-
-            #
+            # print(str(obs[1][u'Name']) + " has " + str(obs[1][u'Food']) + " hunger")
             pass
 
     for i, chat in enumerate(chats):
@@ -134,4 +141,5 @@ while server.IsRunning():
             for msg in chat[1]:
                 print(str(msg))
 
-    time.sleep(2)
+    # Give agent time to process
+    time.sleep(0.2)

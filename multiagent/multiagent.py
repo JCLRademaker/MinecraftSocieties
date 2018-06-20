@@ -1,16 +1,15 @@
-from builtins import range
 from collections import namedtuple
-from tools import angles, spatial, inventory
+from tools import angles, spatial, inventory, crafting
 from message import chat
+import tasks
 
 import movement
 
 import MalmoPython
-import os
-import sys
 import time
 import json
 import math
+
 # malmoutils.fix_print()
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -39,7 +38,6 @@ class MultiAgent:
 
         # The Malmo host
         self.host = MalmoPython.AgentHost()
-
         # Wrappers; makes it easier to use these
         self.world_state = None
 
@@ -47,7 +45,7 @@ class MultiAgent:
         self.chatter = chat.ChatClient(name)
 
         # TODO:
-        # MAke htis niec
+        # Make this nice
         self.my_mission = MalmoPython.MissionSpec(xml,True)
         self.my_mission_record = MalmoPython.MissionRecordSpec()
         self.role = role
@@ -58,8 +56,11 @@ class MultiAgent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (25,60,25) #TODO: Set dynamically at spawn
+        self.home = (25, 60, 25) #TODO: Set dynamically at spawn
 
+        # Task queue
+        self.taskList = list()
+        # self.Position = (0, 61, 0, 0, 0)
 
     def StartMission(self, clientPool):
         """ """
@@ -124,15 +125,15 @@ class MultiAgent:
 
         if self.world_state.number_of_observations_since_last_state > 0:
             msg = self.world_state.observations[-1].text
-            data = json.loads(msg)
+            self.data = json.loads(msg)
             self.Position = (
-                data.get(u'XPos', 0),
-                data.get(u'YPos', 0),
-                data.get(u'ZPos', 0),
-                data.get(u'Yaw',  0),
-                data.get(u'Pitch',0)
+                self.data.get(u'XPos', 0),
+                self.data.get(u'YPos', 0),
+                self.data.get(u'ZPos', 0),
+                self.data.get(u'Yaw',  0),
+                self.data.get(u'Pitch', 0)
             )
-            return True, data
+            return True, self.data
 
         return False, False
 
@@ -202,8 +203,8 @@ class MultiAgent:
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
-        targetLocationN = (targetLocation[0], targetLocation[1]-1, targetLocation[2])
-        return self.mov.MoveLookAtLocation(targetLocationN, distance = 1)
+        targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
+        return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
@@ -225,67 +226,97 @@ class MultiAgent:
 
         return False
 
-# ==============================================================================
-# ============================ Adding to Inventory =============================
-# ==============================================================================
-    def AddItemsToChest(self, available_inventories, super_inventory, other_inv_name, item_type):
+    # ==============================================================================
+    # ================================= Inventory ==================================
+    # ==============================================================================
+    def GetInventory(self, super_inventory, inventory_name):
+        return inventory.GetInventory(super_inventory, inventory_name, InventoryObject)
+
+    def GetAmountOfType(self, _inventory, item_type):
+        return inventory.GetAmountOfType(_inventory, item_type)
+
+    def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-        other_inv = inventory.GetInventory(super_inventory, other_inv_name, InventoryObject)
+        o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
+
+        # Size can only be retrieved through the available inventories entry, which sucks.
+        o_inv_size = inventory.GetInventorySize(available_inventories, o_inv_name)
 
         # Only do this if the inventory is not full
-        if not inventory.IsInventoryFull(other_inv):
-            # Retrieve items of type [ ] from the inventory
-            item_slots = inventory.GetItemsFromInventory(agent_inv, item_type)
+        if not inventory.IsInventoryFull(o_inv, o_inv_size):
+            # Retrieve items of type [ ] from BOTH inventories.
+            item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
+            o_inv_slots = inventory.RetrieveItemOfType(o_inv, item_type)
 
-            # Size can only be retrieved through the available inventories entry, which sucks.
-            other_inv_size = inventory.GetInventorySize(available_inventories, other_inv_name)
-
-            # Items of type [ ] in both inventory and chest
-            if len(other_inv) > 0 and len(item_slots) >= 0:
-                # First combine if that's possible
-                item_slots = self.CombineSlots(other_inv, other_inv_name, item_slots)
+            # Items can possibly be combined with slots in chest
+            if len(o_inv_slots) > 0 and len(item_slots) > 0:
+                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
 
                 # Try and SWAP slots if there are still items left in the inventory
+                item_slots = [x for x in item_slots if x[1] > 0]
                 if len(item_slots) > 0:
-                    indices_used = inventory.FindSlotsInUse(other_inv, other_inv_name)
+                    indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
                     for slot in item_slots:
-                        self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, slot[0])
+                        item_slots, o_inv_slots = self.CombineSwapSlots(
+                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
             #  The chest is empty, add the items to the first (couple of) slot(s)
             elif len(item_slots) > 0:
                 indices_used = []
-                for item in item_slots:
-                    self.CombineSwapSlots(indices_used, other_inv_name, other_inv_size, item[0])
+                for slot in item_slots:
+                    item_slots, o_inv_slots = self.CombineSwapSlots(
+                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
 
-    def CombineSlots(self, other_inv, other_inv_name, item_slots):
+    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
         # If there are slots left to COMBINE...
         for slot in item_slots:
-            quantity_left = slot[1]
-            for item in other_inv:
-                if quantity_left > 0:
-                    # Always update the amount of items that is left (sadly has to be done manually, skeere tijden)
-                    command, quantity_left = inventory.CombineSlotsWithAgent(slot[0], other_inv_name, item, slot[1])
-                    if command != "":
-                        self.SendCommand(command)
-                else:
-                    slot = (-1, -1)
-        return [x for x in item_slots if x != (-1, -1)]
+            for item in o_inv_slots:
+                if item[1] < 64:
+                    # Update and keep track of the slots manually (sadly this has to be done because Malmo)
+                    command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+                        slot, item, item_slots, o_inv_slots, o_inv_name)
+                    self.SendCommand(command)
+        return item_slots, o_inv_slots
 
-    def CombineSwapSlots(self, indices_used, other_inv_name, other_inv_size, index):
-        # First try and combine with the last chest slot (could be that only
-        # 12 objects were added to the slot, and you want to fill that up first)
-        command = inventory.CombineSlotWithAgent(index, len(indices_used) - 1, other_inv_name)
-        self.SendCommand(command)
+    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
+        # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
+        if len(indices_used) > 0:
+            index = len(o_inv_slots) - 1
+            if o_inv_slots[index][1] < 64:
+                command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
+                self.SendCommand(command)
+        # SWAP items with EMPTY slot(s)
+        if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
+            command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
+                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
+            if command != "":
+                self.SendCommand(command)
+        return item_slots, o_inv_slots
 
-        # Update the indices that are in use by the chest (sadly has to be done manually, skeere tijden).
-        command, indices_used = inventory.SwapSlotsWithAgent(index, other_inv_name, other_inv_size, indices_used)
+    # ==============================================================================
+    # ================================ Crafting ====================================
+    # ==============================================================================
+    def TryCraftItem(self, _inventory, recipe_name):
+        item_crafted = False
+        can_craft, craftable_elements = crafting.IsRecipeInInventory(_inventory, recipe_name)
 
-        # Swap item from inventory with (empty) item from chest
-        if command != "":
-            self.SendCommand(command)
+        if can_craft and len(craftable_elements) > 0:
+            for element in craftable_elements:
+                self.SendCommand("craft " + str(element))
+            self.SendCommand("craft " + recipe_name)
+            item_crafted = True
+        elif can_craft:
+            self.SendCommand("craft " + recipe_name)
+        else:
+            missing_elements = crafting.GetMissingElements(_inventory, recipe_name)
+            # return missing_elements
 
-# ==============================================================================
-# ============================ Maintaining a Map ===============================
-# ==============================================================================
+        if item_crafted:
+            return True
+
+    # ==============================================================================
+    # ============================ Maintaining a Map ===============================
+    # ==============================================================================
 
     def UpdateMapFull(self, worldmap):
         # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
@@ -294,9 +325,8 @@ class MultiAgent:
         for i in range(13):
             for j in range(13):
                 block_value = worldmap[13 * i + j]
-                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2])- 6 + i)
+                block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
                 self.UpdateMapBlock(block_value, block_position)
-
 
     def UpdateMapEfficient(self, worldmap):
         # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
@@ -304,7 +334,7 @@ class MultiAgent:
         # Update the block_list of all noteworthy blocks found.
         # Efficient only updates the outer rim of the observed field, rather than the entire field.
         for i in range(13):
-            for j in (0,12):
+            for j in (0, 12):
                 block_value = worldmap[13 * i + j]
                 block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
                 self.UpdateMapBlock(block_value, block_position)
@@ -332,3 +362,73 @@ class MultiAgent:
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (coordinates[0] // 100, coordinates[2] // 100)
         return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]
+
+    # ==============================================================================
+    # ============================ Vision methods ==================================
+    # ==============================================================================
+    """ Returns the object the agent is currently looking at and whether it is in range
+        Takes the u'LineOfSight' object from the data as parameter
+        Make sure that the agent has ObservationFromRay in it's agentHandlers
+    """
+
+    def getObjectFromRay(self):
+        if u'LineOfSight' in self.data:
+            rayObservation = self.data[u'LineOfSight']
+            object = rayObservation["type"]
+            inRange = rayObservation["inRange"]
+            return object, inRange
+        else:
+            return False, False
+
+    # ==============================================================================
+    # ============================ Task execution ==================================
+    # ==============================================================================
+
+    """   Makes the given agent perform the current task from its tasklist
+      Returns true when the task is done and removed from the queue
+    """
+
+    def doCurrentTask(self):
+        if len(self.taskList) > 0:  # Look for tasks
+            task = self.taskList[0]
+            if task[0](*task[1:], agent=self):  # Perform the task and remove the task from the queue if its finished
+                print(str(task[0]) + " completed.")
+                del self.taskList[0]
+                time.sleep(0.5)
+                return True  # Task is done and removed
+        return False  # Not doing a task / task is not done yet
+
+    """
+      Add a task to the agents task list
+	  Tasks are in the form of (functionCall(), paramA, paramB)
+    """
+
+    def addTask(self, task):
+        self.taskList.append(task)
+
+    # ==============================================================================
+    # ============================ High level task wrappers ========================
+    # ==============================================================================
+    """
+    Adds all the subtasks for woodcutting to the agents tasklist
+    """
+
+    def addWoodcutterTask(self):
+        self.addTask((tasks.moveToResource, u'log'))
+        self.addTask((tasks.harvestResource, u'log'))
+        self.addTask((tasks.collectResource, "log"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'log'))
+
+    """
+    Adds all the subtasks for stonecutting to the agents tasklist
+    """
+
+    def addStonecutterTask(self):
+        self.addTask((tasks.moveToResource, u'stone'))
+        self.addTask((tasks.harvestResource, u'stone'))
+        self.addTask((tasks.collectResource, "cobblestone"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'cobblestone'))
+
+

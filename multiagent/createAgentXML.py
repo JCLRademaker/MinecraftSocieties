@@ -1,6 +1,6 @@
 def CreateAgentXML(name, coords = "", inventory = ""):
     if coords == "":
-        placement = '''<Placement x="0" y="60.0" z="0" pitch="0" yaw="0"/>'''
+        placement = '''<Placement x="0" y="61" z="0" pitch="0" yaw="0"/>'''
 
     xml = '''<AgentSection mode="Survival">
                      <Name>''' + name + '''</Name>

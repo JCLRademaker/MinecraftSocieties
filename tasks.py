@@ -48,6 +48,7 @@ def tryCraftItem(itemtype, agent):
     inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")
     return agent.TryCraftItem(inventory, itemtype)
 
+
 def goToPosition(location, agent):
     return agent.MoveLookAtBlock(location)
 
