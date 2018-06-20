@@ -60,7 +60,7 @@ class Agent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (0,61,0) #TODO: Set dynamically at spawn
+        self.home = (0, 61, 0) # TODO: Set dynamically at spawn
 
         # Task queue
         self.taskList = list()
