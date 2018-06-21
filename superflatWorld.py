@@ -51,6 +51,9 @@ def MakeDrawingDecorator():
     block_type = "ender_chest"
     drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
                          ' type="' + block_type + '"' + '/>'
+    # Test log                     
+    drawing_decorator +=  '<DrawBlock x="' + str(-20) + '" y="' + str(60) + '" z="' + str(-20) + '"' + \
+                         ' type="' + "log" + '"' + '/>'
 
     # ... And done!
     drawing_decorator += "</DrawingDecorator>"
@@ -73,7 +76,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                 <ServerSection>
                     <ServerInitialConditions>
                         <Time>
-                            <StartTime>1000</StartTime>
+                            <StartTime>6000</StartTime>
                             <AllowPassageOfTime>false</AllowPassageOfTime>
                         </Time>
                         <Weather>clear</Weather>
@@ -81,39 +84,39 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         <AllowedMobs>''' + mob_types + '''</AllowedMobs>
                     </ServerInitialConditions>
                     <ServerHandlers>
-                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;35;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
+                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
                         <ServerQuitFromTimeUp timeLimitMs="100000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                 </ServerSection>
-
                 <AgentSection mode="Survival">
                     <Name>Adam</Name>
                     <AgentStart>
                         <Placement x="0" y="61" z="0" pitch="0" yaw="0"/>
                         <Inventory>
-                            <InventoryItem slot="0" type="diamond_pickaxe"/>
-                            <InventoryItem slot="1" type="diamond_hoe"/>
-                            <InventoryItem slot="2" type="iron_axe"/>
-                            <InventoryItem slot="4" type="log" quantity="12"/>
+                            <InventoryItem slot="0" type="planks" quantity="1"/>
+                            <InventoryItem slot="1" type="stick" quantity="2"/>
+                            <InventoryItem slot="2" type="cobblestone" quantity="3"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
                         <ObservationFromFullInventory flat="false"/>
                         <ObservationFromRay/>
                         <InventoryCommands/>
-	                 	<AbsoluteMovementCommands/>                    
+                        <AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>
                         <ContinuousMovementCommands turnSpeedDegs="180"/>
-	                   	<ObservationFromNearbyEntities>
-		                    <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+                        <SimpleCraftCommands/>
+                        <ObservationFromNearbyEntities>
+                            <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
                         </ObservationFromNearbyEntities>
                         <ObservationFromGrid>
                             <Grid name="worldGrid" absoluteCoords="false">
-                            <min x="-6" y="0" z="-6"/>
-                            <max x="6" y="0" z="6"/>
+                                <min x="-6" y="0" z="-6"/>
+                                <max x="6" y="0" z="6"/>
                             </Grid>
                         </ObservationFromGrid>
+                        <ChatCommands/>
                     </AgentHandlers>
                 </AgentSection>
             </Mission>'''

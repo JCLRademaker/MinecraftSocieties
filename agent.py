@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from builtins import range
 from collections import namedtuple
-from tools import angles, spatial, inventory
+from tools import angles, spatial, inventory, crafting
 from message import chat
 
 import MalmoPython
@@ -11,6 +11,7 @@ import sys
 import time
 import json
 import math
+import tasks
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -20,7 +21,7 @@ InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity
 InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
 # Mapping from which resources can be gathered by which tools
-resourceToToolMapping = { u'log' : "iron_axe"}
+resourceToToolMapping = { u'log' : "wooden_axe"}
 
 if sys.version_info[0] == 2:
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
@@ -59,7 +60,7 @@ class Agent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (25,60,25) #TODO: Set dynamically at spawn
+        self.home = (0, 61, 0) # TODO: Set dynamically at spawn
 
         # Task queue
         self.taskList = list()
@@ -106,6 +107,13 @@ class Agent:
             for error in self.world_state.errors:
                 print("Error:",error.text)
 
+        # Set initial world things
+        self.SendCommand('chat /gamemode survival')
+        self.SendCommand('chat /gamerule naturalRegeneration false')
+        self.SendCommand('chat /effect @p minecraft:hunger 4 200')
+        # self.SendCommand('chat /effect @p 23 9999 0 false')
+        # self.SendCommand('chat /effect @p 17 9999 1 false')
+
         print()
         print("Mission running " + "\n", end=' ')
 
@@ -131,15 +139,15 @@ class Agent:
 
         if self.world_state.number_of_observations_since_last_state > 0:
             msg = self.world_state.observations[-1].text
-            data = json.loads(msg)
+            self.data = json.loads(msg)
             self.Position = (
-                data.get(u'XPos', 0),
-                data.get(u'YPos', 0),
-                data.get(u'ZPos', 0),
-                data.get(u'Yaw',  0),
-                data.get(u'Pitch',0)
+                self.data.get(u'XPos', 0),
+                self.data.get(u'YPos', 0),
+                self.data.get(u'ZPos', 0),
+                self.data.get(u'Yaw',  0),
+                self.data.get(u'Pitch',0)
             )
-            return True, data
+            return True, self.data
 
         return False, False
 
@@ -303,6 +311,12 @@ class Agent:
 # ==============================================================================
 # ================================= Inventory ==================================
 # ==============================================================================
+    def GetInventory(self, super_inventory, inventory_name):
+        return inventory.GetInventory(super_inventory, inventory_name, InventoryObject)
+
+    def GetAmountOfType(self, _inventory, item_type):
+        return inventory.GetAmountOfType(_inventory, item_type)
+
     def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
         o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
@@ -362,6 +376,27 @@ class Agent:
         return item_slots, o_inv_slots
 
 # ==============================================================================
+# ================================ Crafting ====================================
+# ==============================================================================
+    def TryCraftItem(self, _inventory, recipe_name):
+        item_crafted = False
+        can_craft, craftable_elements = crafting.IsRecipeInInventory(_inventory, recipe_name)
+
+        if can_craft and len(craftable_elements) > 0:
+            for element in craftable_elements:
+                self.SendCommand("craft " + str(element))
+            self.SendCommand("craft " + recipe_name)
+            item_crafted = True
+        elif can_craft:
+            self.SendCommand("craft " + recipe_name)
+        else:
+            missing_elements = crafting.GetMissingElements(_inventory, recipe_name)
+            # return missing_elements
+
+        if item_crafted:
+            return True
+
+# ==============================================================================
 # ============================ Maintaining a Map ===============================
 # ==============================================================================
 
@@ -418,7 +453,60 @@ class Agent:
         Takes the u'LineOfSight' object from the data as parameter
         Make sure that the agent has ObservationFromRay in it's agentHandlers
     """
-    def getObjectFromRay(self, rayObservation):
-        object = rayObservation["type"]
-        inRange = rayObservation["inRange"]
-        return object, inRange
+    def getObjectFromRay(self):
+        if u'LineOfSight' in self.data: 
+            rayObservation = self.data[u'LineOfSight']
+            object = rayObservation["type"]
+            inRange = rayObservation["inRange"]
+            return object, inRange
+        else:
+            return False, False
+        
+# ==============================================================================
+# ============================ Task execution ==================================
+# ==============================================================================
+
+    """   Makes the given agent perform the current task from its tasklist
+      Returns true when the task is done and removed from the queue
+    """
+    def doCurrentTask(self):
+        if len(self.taskList) > 0: # Look for tasks
+            task = self.taskList[0]
+            if task[0](*task[1:], agent = self): #Perform the task and remove the task from the queue if its finished
+                print(str(task[0]) + " completed.")
+                del self.taskList[0]
+                time.sleep(0.5)
+                return True # Task is done and removed 
+        return False #Not doing a task / task is not done yet 
+
+    """
+      Add a task to the agents task list
+	  Tasks are in the form of (functionCall(), paramA, paramB)
+    """
+    def addTask(self, task):
+         self.taskList.append(task)
+
+         
+# ==============================================================================
+# ============================ High level task wrappers ========================
+# ==============================================================================
+    """
+    Adds all the subtasks for woodcutting to the agents tasklist
+    """
+    def addWoodcutterTask(self):
+        self.addTask((tasks.moveToResource, u'log'))
+        self.addTask((tasks.harvestResource, u'log'))
+        self.addTask((tasks.collectResource, "log"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'log'))
+    """
+    Adds all the subtasks for stonecutting to the agents tasklist
+    """
+    def addStonecutterTask(self):
+        self.addTask((tasks.moveToResource, u'stone'))
+        self.addTask((tasks.harvestResource, u'stone'))
+        self.addTask((tasks.collectResource, "cobblestone"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'cobblestone'))
+    
+        
