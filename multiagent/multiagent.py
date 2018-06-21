@@ -22,11 +22,6 @@ InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 # Mapping from which resources can be gathered by which tools
 resourceToToolMapping = { u'log' : "iron_axe"}
 
-# TODO:
-# Why is this here?
-isCollecting = False
-isDroppingOff = False
-
 
 # ==============================================================================
 # ========================== The Generic Agent Object ==========================
@@ -204,6 +199,34 @@ class MultiAgent:
         """
         targetLocationN = (targetLocation[0], targetLocation[1]-1, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 1)
+
+
+
+    def PlaceBlock(self, targetLocation):
+        # Makes the agent look to the middle of the block
+        if self.Position[0] - targetLocation[0] > 0:
+            dx = -0.3
+        else: dx = 0.3
+        if self.Position[2] - targetLocation[2] > 0:
+            dz = - 0.3
+        else: dz = 0.3
+
+        loc = (targetLocation[0]+dx, targetLocation[1], targetLocation[2]+dz)
+
+        self.mov.yawd = False
+        self.mov.pitd = False
+
+        if self.LookAtLocation(loc):
+            self.SendCommand("use 1")
+            self.SendCommand("use 0")
+            print(loc)
+            return True
+
+        return False
+
+
+
+
 
 # ==============================================================================
 # ============================= Resource Gathering =============================

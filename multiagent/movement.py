@@ -10,8 +10,6 @@ class Movement:
 
     def LookAtLocation(self, location):
         """ Turn and pitch towards a location in the world """
-        self.yawd = False
-        self.pitd = False
 
         # Reset movement every step
         self.SendCommand("move 0")
