@@ -201,6 +201,18 @@ class MultiAgent:
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
+    def LookAtBlock(self, location):
+        """ Look at the center of a block in 3D coordinates """
+
+        # Reset movement every step
+        self.SendCommand("move 0")
+        self.SendCommand("pitch 0")
+        self.SendCommand("turn 0")
+
+        # Calcualte the center of the block
+        tLoc = (location[0] + 0.5, location[1] + 0.5, location[2] + 0.5)
+
+        return self.mov.LookAtLocation(rLoc, 1)
 
 
     def PlaceBlock(self, targetLocation):

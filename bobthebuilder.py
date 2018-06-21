@@ -44,7 +44,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <ServerQuitFromTimeUp description="" timeLimitMs="35000"/>
       <ServerQuitWhenAnyAgentFinishes description=""/>
     </ServerHandlers>
-  </ServerSection>'''+ createAgentXML.CreateAgentXML("Walker", inventory = invent) + '''
+  </ServerSection>'''+ createAgentXML.CreateAgentXML("Walker", inventory = invent, coords = (0, 227, 0)) + '''
 
 </Mission>'''
 

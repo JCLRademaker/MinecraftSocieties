@@ -8,7 +8,7 @@ class Movement:
     def __init__(self, agent):
         self.agent = agent
 
-    def LookAtLocation(self, location):
+    def LookAtLocation(self, location, maxangle = 2):
         """ Turn and pitch towards a location in the world """
 
         # Reset movement every step
@@ -18,12 +18,12 @@ class Movement:
 
         # Turn towards the location in the XZ plane
         if not self.yawd:
-            if self.TryTurnTo(location, maxAngle = 2):
+            if self.TryTurnTo(location, maxAngle = maxangle):
                 self.yawd = True
 
         # Turn towards the location in the XY plane
         if self.yawd and not self.pitd:
-            if self.TryPitchTo(location, maxAngle = 2):
+            if self.TryPitchTo(location, maxAngle = maxangle):
                 return True
 
     def MoveLookAtLocation(self, targetLocation, distance = 0):
