@@ -33,14 +33,12 @@ class MultiAgent:
 
         # The Malmo host
         self.host = MalmoPython.AgentHost()
-        # Wrappers; makes it easier to use these
         self.world_state = None
 
         # Chat
         self.chatter = chat.ChatClient(name)
 
-        # TODO:
-        # Make this nice
+        # TODO: make this nice
         self.my_mission = MalmoPython.MissionSpec(xml,True)
         self.my_mission_record = MalmoPython.MissionRecordSpec()
         self.role = role
@@ -51,11 +49,22 @@ class MultiAgent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (25, 60, 25) #TODO: Set dynamically at spawn
+        self.home = (25, 60, 25)  # TODO: Set dynamically at spawn
+        self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom"]
 
         # Task queue
         self.taskList = list()
-        # self.Position = (0, 61, 0, 0, 0)
+
+        # All preferences (in order) and initial preference list
+        self.AllPreferences = ["build", "scout", "gather", "mine", "replenish"]
+        self.Preference = ["scout", "gather", "mine", "build", "replenish"]
+
+        # Thresholds for determining preferences (can be changed, just initial numbers here)
+        self.hpThreshold = 10
+        self.hungerThreshold = 10
+        self.mineThreshold = 2  # Processed materials like planks (so not logs)
+        self.foodThreshold = 4
+        self.scoutThreshold = 2
 
     def StartMission(self, clientPool):
         """ """
@@ -92,6 +101,7 @@ class MultiAgent:
             if used_attempts == max_attempts:
                 print("All chances used up - bailing now.")
                 exit(1)
+
         print("startMission called okay.")
 
 # ==============================================================================
@@ -128,9 +138,47 @@ class MultiAgent:
                 self.data.get(u'Yaw',  0),
                 self.data.get(u'Pitch', 0)
             )
+
+            self.AdjustPreferences()
+
             return True, self.data
 
         return False, False
+
+    def AdjustPreferences(self):
+        self.Preference = []
+        inv = self.GetInventory(self.data[u'inventory'], "inventory")
+        # Get stats for reasoning
+        hunger = int(self.data[u'Food'])
+        health = self.data[u'Life']
+
+        # HP/Hunger
+        if health < self.hpThreshold or hunger < self.hungerThreshold:
+            self.Preference.append("replenish")
+
+        # Food gathering
+        if self.GetAmountOfType(inv, "melon") < self.foodThreshold:
+            self.Preference.append("gather")
+
+        # Mining
+        if self.GetAmountOfType(inv, "log") + self.GetAmountOfType(inv, "cobblestone") < self.mineThreshold:
+            self.Preference.append("mine")
+
+        # Scouting
+        if len(self.block_list) < self.scoutThreshold:
+            self.Preference.append("scout")
+
+        # Build has priority if the rest wasn't appended
+        self.Preference.append("build")
+
+        # Check if all the preference entries are in the list
+        for pref in self.AllPreferences:
+            if pref not in self.Preference:
+                self.Preference.append(pref)
+
+    def GetPreferences(self):
+        preference = (self.name, self.Preference)
+        return preference
 
     def GetChat(self):
         """
@@ -201,19 +249,6 @@ class MultiAgent:
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
-    def LookAtBlock(self, location):
-        """ Look at the center of a block in 3D coordinates """
-
-        # Reset movement every step
-        self.SendCommand("move 0")
-        self.SendCommand("pitch 0")
-        self.SendCommand("turn 0")
-
-        # Calcualte the center of the block
-        tLoc = (location[0] + 0.5, location[1] + 0.5, location[2] + 0.5)
-
-        return self.mov.LookAtLocation(rLoc, 1)
-
 
     def PlaceBlock(self, targetLocation):
         # Makes the agent look to the middle of the block
@@ -236,10 +271,6 @@ class MultiAgent:
             return True
 
         return False
-
-
-
-
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
@@ -384,9 +415,9 @@ class MultiAgent:
         if map_key not in self.big_map:
             self.big_map[map_key] = [[False for _ in range(100)] for _ in range(100)]
 
-        if not self.big_map[map_key][block_position[1] % 100][block_position[0] % 100]:
-            self.big_map[map_key][block_position[1] % 100][block_position[0] % 100] = block_value
-            if block_value != "air":  # TODO: More filtering on non-interesting block types
+        if not self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)]:
+            self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)] = block_value
+            if block_value not in self.scoutingBlacklist:  # TODO: More filtering on non-interesting block types
                 if block_value not in self.block_list:
                     self.block_list[block_value] = [block_position]
                 else:
@@ -401,8 +432,6 @@ class MultiAgent:
     # ==============================================================================
     # ============================ Vision methods ==================================
     # ==============================================================================
-
-
     def getObjectFromRay(self):
         """ Returns the object the agent is currently looking at and whether it is in range
             Takes the u'LineOfSight' object from the data as parameter
@@ -427,18 +456,22 @@ class MultiAgent:
     def doCurrentTask(self):
         if len(self.taskList) > 0:  # Look for tasks
             task = self.taskList[0]
-            if task[0](*task[1:], agent=self):  # Perform the task and remove the task from the queue if its finished
+            if len(task) > 1:
+                func = task[0](*task[1:], agent=self)
+            else:
+                func = task[0](agent=self)
+
+            if func:  # Perform the task and remove the task from the queue if its finished
                 print(str(task[0]) + " completed.")
                 del self.taskList[0]
                 time.sleep(0.5)
-                return True  # Task is done and removed
+                return True  # Task is done
         return False  # Not doing a task / task is not done yet
 
     """
       Add a task to the agents task list
-	  Tasks are in the form of (functionCall(), paramA, paramB)
+      Tasks are in the form of (functionCall(), paramA, paramB)
     """
-
     def addTask(self, task):
         self.taskList.append(task)
 
@@ -448,7 +481,6 @@ class MultiAgent:
     """
     Adds all the subtasks for woodcutting to the agents tasklist
     """
-
     def addWoodcutterTask(self):
         self.addTask((tasks.moveToResource, u'log'))
         self.addTask((tasks.harvestResource, u'log'))
@@ -459,10 +491,19 @@ class MultiAgent:
     """
     Adds all the subtasks for stonecutting to the agents tasklist
     """
-
     def addStonecutterTask(self):
         self.addTask((tasks.moveToResource, u'stone'))
         self.addTask((tasks.harvestResource, u'stone'))
         self.addTask((tasks.collectResource, "cobblestone"))
         self.addTask((tasks.goToPosition, self.home))
         self.addTask((tasks.returnItems, u'cobblestone'))
+
+    """
+       Adds all the subtasks for gathering to the agents tasklist
+    """
+    def addGatheringTask(self):
+        self.addTask((tasks.moveToResource, u'melon_block'))
+        self.addTask((tasks.harvestResource, u'melon_block'))
+        self.addTask((tasks.collectResource, "melon"))
+        self.addTask((tasks.goToPosition, self.home))
+        self.addTask((tasks.returnItems, u'melon'))

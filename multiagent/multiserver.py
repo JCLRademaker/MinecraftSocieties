@@ -55,6 +55,11 @@ class MultiServer:
         if time.time() - start_time >= time_out:
             print("Timed out while waiting for mission to start - bailing.")
             exit(1)
+
+        # Set initial world things - the initial agent will just poison everyone
+        agent_hosts[0].SendCommand('chat /gamemode survival')
+        agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 4 200')
+
         print()
         print("Mission has started.")
 
@@ -77,6 +82,17 @@ class MultiServer:
         res = []
         for a in self.agents:
             res.append(a.Observe())
+
+        return res
+
+    def ObservePreferences(self):
+        """
+            Calls the observe function for each agent.
+            returns: returns a list of tuples (succes, data)
+        """
+        res = []
+        for a in self.agents:
+            res.append(a.GetPreferences())
 
         return res
 
