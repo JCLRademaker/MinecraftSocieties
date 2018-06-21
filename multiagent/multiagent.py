@@ -389,12 +389,13 @@ class MultiAgent:
     # ==============================================================================
     # ============================ Vision methods ==================================
     # ==============================================================================
-    """ Returns the object the agent is currently looking at and whether it is in range
-        Takes the u'LineOfSight' object from the data as parameter
-        Make sure that the agent has ObservationFromRay in it's agentHandlers
-    """
+
 
     def getObjectFromRay(self):
+        """ Returns the object the agent is currently looking at and whether it is in range
+            Takes the u'LineOfSight' object from the data as parameter
+            Make sure that the agent has ObservationFromRay in it's agentHandlers
+        """
         if u'LineOfSight' in self.data:
             rayObservation = self.data[u'LineOfSight']
             object = rayObservation["type"]
@@ -453,5 +454,3 @@ class MultiAgent:
         self.addTask((tasks.collectResource, "cobblestone"))
         self.addTask((tasks.goToPosition, self.home))
         self.addTask((tasks.returnItems, u'cobblestone'))
-
-

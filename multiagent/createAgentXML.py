@@ -15,20 +15,22 @@ def CreateAgentXML(name, coords = "", inventory = ""):
                      <AgentHandlers>
                          <ObservationFromFullInventory flat="false"/>
                          <ObservationFromRay/>
-                         <InventoryCommands/>
-                         <AbsoluteMovementCommands/>                    
                          <ObservationFromFullStats/>
-                         <ContinuousMovementCommands turnSpeedDegs="180"/>
-                         <SimpleCraftCommands/>
                          <ObservationFromNearbyEntities>
-                             <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+                         <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
                          </ObservationFromNearbyEntities>
                          <ObservationFromGrid>
-                             <Grid name="worldGrid" absoluteCoords="false">
-                                 <min x="-6" y="0" z="-6"/>
-                                 <max x="6" y="0" z="6"/>
-                             </Grid>
+                         <Grid name="worldGrid" absoluteCoords="false">
+                         <min x="-6" y="0" z="-6"/>
+                         <max x="6" y="0" z="6"/>
+                         </Grid>
                          </ObservationFromGrid>
+
+                         <InventoryCommands/>
+                         <AbsoluteMovementCommands/>
+                         <ContinuousMovementCommands turnSpeedDegs="180"/>
+
+                         <SimpleCraftCommands/>
                          <ChatCommands/>
                      </AgentHandlers>
                  </AgentSection>'''
