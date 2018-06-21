@@ -93,38 +93,31 @@ def GetGrid(x, y, z, size=1):
     #        gr.append(ind)
     return gr
 
-grid = CGetGrid(0,227, 0)
+
+
+
+grid = CGetGrid(0,226, 0)
+grid = [(-2, 226, -1),(-2, 226, 0), (-2, 226, 1)]
 print(grid)
+
 
 server.agents[0].SendCommand("hotbar.4 1")
 server.agents[0].SendCommand("hotbar.4 0")
 
-
+st = [False]*(len(grid)+1)
+st[0] = True
 while server.IsRunning():
     observes = server.Observe()
     if observes[0][0]:
         pos = server.agents[0].Position
 
-        # Inventory
-        inv = observes[0][1].get(u'inventory', 0)
-
-        # The blocks around the agent
-        blocks = observes[0][1].get(u'worldGrid', 0)
-
-        if grid:
-            working = grid[0]
-            if server.agents[0].PlaceBlock(working):
-                grid = grid[1:]
-        else:
-            # Determine if all blocks are placed:
-            grid2 = []
-            for i in grid:
-                if not blocks[int(spatial.IndexFromLocation(server.agents[0].Position, i))] == u'log':
-                    grid2.append(i)
-            print(grid2)
-            if grid2:
-                grid = grid2
-                i = 0
-                working = grid[i]
+        # Bare bones, place a block on all blocks in the grid
+        for i, l in enumerate(grid):
+            if not st[i]:
+                continue
             else:
-                break
+                if server.agents[0].PlaceBlock(l):
+                    st[i+1] = True
+
+        if all(st):
+            break

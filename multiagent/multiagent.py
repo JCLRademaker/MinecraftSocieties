@@ -190,6 +190,8 @@ class MultiAgent:
 
     def LookAtLocation(self, location):
         """ """
+        self.mov.yawd = False
+        self.mov.pitd = False
         return self.mov.LookAtLocation(location)
 
     def MoveLookAtBlock(self, targetLocation):
@@ -201,45 +203,30 @@ class MultiAgent:
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
-    def LookAtBlock(self, location):
-        """ Look at the center of a block in 3D coordinates """
-
-        # Reset movement every step
-        self.SendCommand("move 0")
-        self.SendCommand("pitch 0")
-        self.SendCommand("turn 0")
+    def LookAtopBlock(self, location):
+        """ Look at the top of a block in 3D coordinates """
 
         # Calcualte the center of the block
-        tLoc = (location[0] + 0.5, location[1] + 0.5, location[2] + 0.5)
 
-        return self.mov.LookAtLocation(rLoc, 1)
+        dx = spatial.OneNorm(location[0], self.Position[0])
 
+        dz = spatial.OneNorm(location[2], self.Position[2])
 
-    def PlaceBlock(self, targetLocation):
-        # Makes the agent look to the middle of the block
-        if self.Position[0] - targetLocation[0] > 0:
-            dx = -0.3
-        else: dx = 0.3
-        if self.Position[2] - targetLocation[2] > 0:
-            dz = - 0.3
-        else: dz = 0.3
-
-        loc = (targetLocation[0]+dx, targetLocation[1], targetLocation[2]+dz)
-
+        tLoc = (location[0] +  0.6, location[1] + 1, location[2] +  0.6)
         self.mov.yawd = False
         self.mov.pitd = False
 
-        if self.LookAtLocation(loc):
+        return self.mov.LookAtLocation(tLoc, 1)
+
+    def PlaceBlock(self, targetLocation):
+        """ Looks at middle of where a block should be, then place it """
+
+        if self.LookAtopBlock(targetLocation):
             self.SendCommand("use 1")
             self.SendCommand("use 0")
-            print(loc)
             return True
 
         return False
-
-
-
-
 
 # ==============================================================================
 # ============================= Resource Gathering =============================

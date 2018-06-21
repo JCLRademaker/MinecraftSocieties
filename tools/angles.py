@@ -12,8 +12,12 @@ def CalcDAngle(dA, dB, maxAngle, curAngle):
     return dangle
 
 def CalcDeltaPitch(agent, location):
+    """
+
+    """
+
     dx = max(abs(location[0] - agent[0]), 1)
-    dy = max(abs(location[1] - agent[1]), 1)
+    dy = max(abs(location[1] - (agent[1]+1.5)), 1) # Magic numbers: the 1.5 is the height of the face
 
     deltaPitch = CalcDAngle(dy, dx, 90, agent[4])
 
