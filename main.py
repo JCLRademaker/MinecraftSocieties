@@ -21,12 +21,12 @@ server.StartServer(agents)
 
 while server.IsRunning():
     success, obser = server.Observe()       # Call all Agent.Observe for init
-    prefs = server.ObservePreferences()     # Call all Agent.Preferences (for voting)
+    prefScores = server.ReasonOnPreferences()     # Call all Agent.Preferences (for voting)
     chats = server.GetChat()                # Call all Agent.GetChat
 
     if success:
-        for i, pref in enumerate(prefs):
-            print(pref)
+        print(prefScores)
+        for i, score in enumerate(prefScores):
             pass
 
         for i, chat in enumerate(chats):
