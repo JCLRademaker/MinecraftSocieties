@@ -238,6 +238,8 @@ class MultiAgent:
 
     def LookAtLocation(self, location):
         """ """
+        self.mov.yawd = False
+        self.mov.pitd = False
         return self.mov.LookAtLocation(location)
 
     def MoveLookAtBlock(self, targetLocation):
@@ -249,25 +251,27 @@ class MultiAgent:
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
+    def LookAtopBlock(self, location):
+        """ Look at the top of a block in 3D coordinates """
 
-    def PlaceBlock(self, targetLocation):
-        # Makes the agent look to the middle of the block
-        if self.Position[0] - targetLocation[0] > 0:
-            dx = -0.3
-        else: dx = 0.3
-        if self.Position[2] - targetLocation[2] > 0:
-            dz = - 0.3
-        else: dz = 0.3
+        # Calcualte the center of the block
 
-        loc = (targetLocation[0]+dx, targetLocation[1], targetLocation[2]+dz)
+        dx = spatial.OneNorm(location[0], self.Position[0])
 
+        dz = spatial.OneNorm(location[2], self.Position[2])
+
+        tLoc = (location[0] +  0.6, location[1] + 1, location[2] +  0.6)
         self.mov.yawd = False
         self.mov.pitd = False
 
-        if self.LookAtLocation(loc):
+        return self.mov.LookAtLocation(tLoc, 1)
+
+    def PlaceBlock(self, targetLocation):
+        """ Looks at middle of where a block should be, then place it """
+
+        if self.LookAtopBlock(targetLocation):
             self.SendCommand("use 1")
             self.SendCommand("use 0")
-            print(loc)
             return True
 
         return False
