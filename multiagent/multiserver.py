@@ -16,7 +16,7 @@ class MultiServer:
 
     def StartServer(self, names, ip = '127.0.0.1'):
         """
-            Initiates a server given a certain XML file and a list of names of the agents
+            Initiates a server given a mission XML and a list of names of the agents
         """
         for i, name in enumerate(names):
             n = 10000 + i
@@ -87,28 +87,28 @@ class MultiServer:
 
     def ReasonOnPreferences(self):
         """
-            Observes preferences of all agents and 
-            creates a global preference list 
+            Observes preferences of all agents and
+            creates a global preference list
             based on the borda rule
         """
         individualPrefs = []
         scores = {"scout": 0, "gather": 0, "mine": 0, "build": 0}
-        
+
         for a in self.agents:
             individualPrefs.append(a.GetPreferences())
-        
+
         # Add all the preferences of the agents to the total
         # According to the Borda rule
         for a in individualPrefs:
             preferences = a[1]
             priority = 3
-            
+
             for pref in preferences:
                 if pref is not "replenish":
                     scores[pref] += priority
-                priority -= 1    
+                priority -= 1
 
-        # Sort based on Borda scores                
+        # Sort based on Borda scores
         scores = sorted(scores.items(), key=lambda x: x[1], reverse = True)
         return scores
 

@@ -111,6 +111,7 @@ while server.IsRunning():
     if observes[0][0]:
         pos = server.agents[0].Position
 
+
         # Bare bones, place a block on all blocks in the grid
         for i, l in enumerate(grid):
             if not st[i]:
@@ -118,6 +119,8 @@ while server.IsRunning():
             else:
                 if server.agents[0].PlaceBlock(l):
                     st[i+1] = True
+                #else:
+                #    print(observes[0][1].get(u'LineOfSight',""))
 
         if all(st):
             break

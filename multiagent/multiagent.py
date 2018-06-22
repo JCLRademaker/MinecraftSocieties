@@ -260,11 +260,18 @@ class MultiAgent:
 
     def PlaceBlock(self, targetLocation):
         """ Looks at middle of where a block should be, then place it """
-
         if self.LookAtopBlock(targetLocation):
             self.SendCommand("use 1")
             self.SendCommand("use 0")
-            return True
+            time.sleep(0.01)
+
+            raydat = self.data.get(u'LineOfSight',False)
+
+            if raydat:
+                if raydat[u'y'] > targetLocation[1]+1:
+                    print(self.data.get(u'LineOfSight',""))
+                    print("placed")
+                    return True
 
         return False
 
@@ -444,6 +451,26 @@ class MultiAgent:
     # ==============================================================================
     # ============================ Task execution ==================================
     # ==============================================================================
+
+
+
+    def TryExecuteTask(self):
+        """
+            Tries to execute the task queue
+            returns: returns True if all tasks are done or the queue is empty
+        """
+        if len(self.taskList) > 0:  # Look for tasks
+            task = self.taskList[0] # Get the first task
+            if task(agent=self):            # If completed
+                print(task + " completed.")
+                self.taskList = self.taskList[1:]
+            else:                           # If not
+                return False
+
+        return True
+
+
+
 
     """   Makes the given agent perform the current task from its tasklist
       Returns true when the task is done and removed from the queue
