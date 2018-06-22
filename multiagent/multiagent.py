@@ -463,45 +463,15 @@ class MultiAgent:
     # ==============================================================================
     # ============================ Task execution ==================================
     # ==============================================================================
-
-
-
-    def TryExecuteTask(self):
-        """
-            Tries to execute the task queue
-            returns: returns True if all tasks are done or the queue is empty
-        """
-        if len(self.taskList) > 0:  # Look for tasks
-            task = self.taskList[0] # Get the first task
-            if task(agent=self):            # If completed
-                print(task + " completed.")
-                self.taskList = self.taskList[1:]
-            else:                           # If not
-                return False
-
-        return True
-
-
-
-
     """   Makes the given agent perform the current task from its tasklist
       Returns true when the task is done and removed from the queue
     """
 
     def doCurrentTask(self):
-        if len(self.taskList) > 0:  # Look for tasks
+        if len(self.taskList) > 0: 
             task = self.taskList[0]
-            if len(task) > 1:
-                func = task[0](*task[1:], agent=self)
-            else:
-                func = task[0](agent=self)
-
-            if func:  # Perform the task and remove the task from the queue if its finished
-                print(str(task[0]) + " completed.")
-                del self.taskList[0]
-                time.sleep(0.5)
-                return True  # Task is done
-        return False  # Not doing a task / task is not done yet
+            return task.Execute(self)
+        return False
 
     """
       Add a task to the agents task list
