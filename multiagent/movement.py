@@ -89,7 +89,7 @@ class Movement:
         # print(str(self.agent.Position))
         deltaYaw = angles.CalcDeltaYaw(self.agent.Position, targetLocation)
 
-        # If the agent's direction is within 5 degrees of the location it is fine
+        # If the agent's direction is within maxAngle degrees of the location it is fine
         if abs(deltaYaw) < maxAngle:
             return True
 
@@ -98,6 +98,12 @@ class Movement:
 
         self.SendCommand("turn " + str(sp))
         return False
+
+    def SetPitchTo(self, targetLocation):
+        sp = angles.CalcTargetPitch(self.agent.Position, targetLocation)
+        self.SendCommand("setPitch " + str(sp))
+        return True
+
 
     def TryPitchTo(self, targetLocation, maxAngle = 5):
         """ Makes the agent turn and look at a location """
