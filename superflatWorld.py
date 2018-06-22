@@ -25,22 +25,22 @@ def MakeDrawingDecorator():
                          '"' + '/>'
 
     # ...Then create the farm plot
-    for x in range(11, 16):
-        for y in range(11, 16):
-            if x == 13 and (y == 12 or y == 13 or y == 14):
-                # Water is needed to keep the farmland hydrated (hydrates max 4 tiles around 1 water)
-                block_type = "water"
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
-            else:
-                # You first need farmland
-                block_type = "farmland"
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
-                # Then you can place carrots on top of that
-                block_type = crop_types[random.randint(0, len(crop_types)-1)]
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
+    # for x in range(11, 16):
+    #     for y in range(11, 16):
+    #         if x == 13 and (y == 12 or y == 13 or y == 14):
+    #             # Water is needed to keep the farmland hydrated (hydrates max 4 tiles around 1 water)
+    #             block_type = "water"
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
+    #         else:
+    #             # You first need farmland
+    #             block_type = "farmland"
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
+    #             # Then you can place carrots on top of that
+    #             block_type = crop_types[random.randint(0, len(crop_types)-1)]
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
 
     # AAAAAAAAAHHHHH
     block_type = "stone"
@@ -51,6 +51,9 @@ def MakeDrawingDecorator():
     block_type = "ender_chest"
     drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
                          ' type="' + block_type + '"' + '/>'
+    # Test log                     
+    drawing_decorator +=  '<DrawBlock x="' + str(-20) + '" y="' + str(60) + '" z="' + str(-20) + '"' + \
+                         ' type="' + "log" + '"' + '/>'
 
     # ... And done!
     drawing_decorator += "</DrawingDecorator>"
@@ -64,7 +67,7 @@ def ReturnMobTypes():
     return mobs
 
 # Mission XML
-def ReturnMissionXML(forceReset, d_decorator, mob_types):
+def ReturnMissionXML(forceReset):
     missionXML = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <About>
@@ -73,47 +76,47 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                 <ServerSection>
                     <ServerInitialConditions>
                         <Time>
-                            <StartTime>1000</StartTime>
+                            <StartTime>6000</StartTime>
                             <AllowPassageOfTime>false</AllowPassageOfTime>
                         </Time>
                         <Weather>clear</Weather>
                         <AllowSpawning>true</AllowSpawning>
-                        <AllowedMobs>''' + mob_types + '''</AllowedMobs>
+                        <AllowedMobs>''' + ReturnMobTypes() + '''</AllowedMobs>
                     </ServerInitialConditions>
                     <ServerHandlers>
-                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;35;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
+                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + MakeDrawingDecorator() + '''
                         <ServerQuitFromTimeUp timeLimitMs="1000000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                 </ServerSection>
-
                 <AgentSection mode="Survival">
                     <Name>Adam</Name>
                     <AgentStart>
                         <Placement x="0" y="61" z="0" pitch="0" yaw="0"/>
                         <Inventory>
-                            <InventoryItem slot="0" type="diamond_pickaxe"/>
-                            <InventoryItem slot="1" type="diamond_hoe"/>
-                            <InventoryItem slot="2" type="iron_axe"/>
-                            <InventoryItem slot="4" type="log" quantity="12"/>
+                            <InventoryItem slot="0" type="planks" quantity="1"/>
+                            <InventoryItem slot="1" type="stick" quantity="2"/>
+                            <InventoryItem slot="2" type="cobblestone" quantity="3"/>
                         </Inventory>
                     </AgentStart>
                     <AgentHandlers>
                         <ObservationFromFullInventory flat="false"/>
                         <ObservationFromRay/>
                         <InventoryCommands/>
-	                 	<AbsoluteMovementCommands/>                    
+                        <AbsoluteMovementCommands/>                    
                         <ObservationFromFullStats/>
                         <ContinuousMovementCommands turnSpeedDegs="180"/>
-	                   	<ObservationFromNearbyEntities>
-		                    <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
+                        <SimpleCraftCommands/>
+                        <ObservationFromNearbyEntities>
+                            <Range name="close_entities" xrange="10" yrange="3" zrange="10" update_frequency="20" />
                         </ObservationFromNearbyEntities>
                         <ObservationFromGrid>
                             <Grid name="worldGrid" absoluteCoords="false">
-                            <min x="-6" y="0" z="-6"/>
-                            <max x="6" y="0" z="6"/>
+                                <min x="-6" y="0" z="-6"/>
+                                <max x="6" y="0" z="6"/>
                             </Grid>
                         </ObservationFromGrid>
+                        <ChatCommands/>
                     </AgentHandlers>
                 </AgentSection>
             </Mission>'''

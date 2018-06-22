@@ -40,14 +40,11 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
     </ServerInitialConditions>
     <ServerHandlers>
       <FlatWorldGenerator generatorString="3;7,220*1,5*3,2;3;,biome_1" seed="" forceReset = "1"/>
-       <DrawingDecorator>
- 		<DrawBlock x="''' + str(logX) + '''"  y="227" z="'''+ str(logZ) +'''" type="log"/>
-       </DrawingDecorator>
 
       <ServerQuitFromTimeUp description="" timeLimitMs="35000"/>
       <ServerQuitWhenAnyAgentFinishes description=""/>
     </ServerHandlers>
-  </ServerSection>'''+ createAgentXML.CreateAgentXML("Walker", inventory = invent) + '''
+  </ServerSection>'''+ createAgentXML.CreateAgentXML("Walker", inventory = invent, coords = (0, 227, 0)) + '''
 
 </Mission>'''
 
@@ -67,42 +64,63 @@ server.StartServer(agentNames)
 
 # x,y = all x,y | x*x + y*y < 3
 
-def GetGrid(x, y, z):
-    gr = []
-    for dx in range(-1, 2):
-        for dz in range(-1, 2):
-            ind = spatial.IndexFromDifference((dx,0,dz))-1
-            gr.append(ind)
+def CGetGrid(x,y,z, size=1):
+    c1 = (x-size,y,z-size)
+    c2 = (x-size,y,z+size)
+    c3 = (x+size,y,z+size)
+    c4 = (x+size,y,z-size)
+
+    size += 1
+
+    gr = [c1, c2, c3, c4]
+
+    for dx in range(x-size+1, x + size):
+        for dz in range(z-size+1, z + size):
+            gr.append((dx,y,dz))
+
     return gr
 
-grid = GetGrid(0,228, 0)
+def GetGrid(x, y, z, size=1):
+    c1 = spatial.IndexFromDifference((-size, 0, -size))
+    c2 = spatial.IndexFromDifference((-size, 0,  size))
+    c3 = spatial.IndexFromDifference(( size, 0,  size))
+    c4 = spatial.IndexFromDifference(( size, 0,  -size))
+    gr = [c1, c2, c3, c4]
+
+    #for dx in range(-size, size+1):
+    #    for dz in range(-size, size+1):
+    #        ind = spatial.IndexFromDifference((dx,0,dz))-1
+    #        gr.append(ind)
+    return gr
+
+
+
+
+grid = CGetGrid(0,226, 0)
+grid = [(-2, 226, -1),(-2, 226, 0), (-2, 226, 1),(-2, 227, -1),(-2, 227, 0), (-2, 227, 1)]
+print(grid)
+
+
 server.agents[0].SendCommand("hotbar.4 1")
 server.agents[0].SendCommand("hotbar.4 0")
 
-i = 0
-working = grid[i]
-
+st = [False]*(len(grid)+1)
+st[0] = True
 while server.IsRunning():
     observes = server.Observe()
     if observes[0][0]:
         pos = server.agents[0].Position
 
-        # Inventory
-        inv = observes[0][1].get(u'inventory', 0)
 
-        # The blocks around the agent
-        blocks = observes[0][1].get(u'worldGrid', 0)
+        # Bare bones, place a block on all blocks in the grid
+        for i, l in enumerate(grid):
+            if not st[i]:
+                continue
+            else:
+                if server.agents[0].PlaceBlock(l):
+                    st[i+1] = True
+                #else:
+                #    print(observes[0][1].get(u'LineOfSight',""))
 
-        # Place the blocks
-        #for i in range(len(grid)):
-        if blocks[working] == u"log":
-            print("placed", i)
-            i += 1
-            working = grid[i]
-            continue
-        else:
-            loc = spatial.LocationFromIndex(server.agents[0].Position, working)
-            loc = (loc[0],loc[1]-1,loc[2])
-            if server.agents[0].LookAtBlock(loc):
-                server.agents[0].SendCommand("use 1")
-                server.agents[0].SendCommand("use 0")
+        if all(st):
+            break

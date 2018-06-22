@@ -10,6 +10,7 @@ import json
 import errno
 import math
 from collections import namedtuple
+from tools import inventory as inv
 import superflatWorld
 import tasks
 
@@ -28,6 +29,10 @@ xml = superflatWorld.ReturnMissionXML(forceReset, farmland, mobs)
 
 agent = Agent(xml)
 agent.StartMission()
+agent.addTask((tasks.goToPosition, (-20, 61, -20)))
+agent.addTask((tasks.harvestResource, u'log'))
+agent.addTask((tasks.collectResource, "log"))
+agent.addTask((tasks.goToPosition, agent.home))
 agent.addTask((tasks.returnItems, u'log'))
 
 # ==============================================================================
@@ -38,12 +43,6 @@ while agent.is_mission_running():
     success, data = agent.Observe()
     if success:
         agent.doCurrentTask()
-		
-        if u'LineOfSight' in data:
-            object, inrange = agent.getObjectFromRay(data[u'LineOfSight'])
-            print(str(object) + " " +  str(inrange))
-        else:
-            print("nothing here")
 
 print()
 print("Mission ended")

@@ -4,6 +4,13 @@ def dist(a, b):
     """ Pythagoras """
     return math.sqrt(a*a + b*b)
 
+def OneNorm(a, b):
+    """ Returns the distance between two numbers """
+    mi = min(a,b)
+    ma = max(a,b)
+    return ma - mi
+
+
 
 def LocationFromIndex(agent, index):
     # The grid is a 13x13 area, of which the agent is in the center..ish

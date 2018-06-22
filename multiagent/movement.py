@@ -8,10 +8,8 @@ class Movement:
     def __init__(self, agent):
         self.agent = agent
 
-    def LookAtLocation(self, location):
+    def LookAtLocation(self, location, maxangle = 2):
         """ Turn and pitch towards a location in the world """
-        self.yawd = False
-        self.pitd = False
 
         # Reset movement every step
         self.SendCommand("move 0")
@@ -20,12 +18,12 @@ class Movement:
 
         # Turn towards the location in the XZ plane
         if not self.yawd:
-            if self.TryTurnTo(location, maxAngle = 2):
+            if self.TryTurnTo(location, maxAngle = maxangle):
                 self.yawd = True
 
         # Turn towards the location in the XY plane
         if self.yawd and not self.pitd:
-            if self.TryPitchTo(location, maxAngle = 2):
+            if self.TryPitchTo(location, maxAngle = maxangle):
                 return True
 
     def MoveLookAtLocation(self, targetLocation, distance = 0):
@@ -55,7 +53,7 @@ class Movement:
 
             if di > distance:
                 sp = min(1, di/10)
-                self.SendCommand("move "+ str(sp))
+                self.SendCommand("move " + str(sp))
             else:
                 self.movd = True
 
@@ -88,9 +86,10 @@ class Movement:
     def TryTurnTo(self, targetLocation, maxAngle = 5):
         """ Turn in the XZ plane towards the location """
         # Calculate the actual angle
+        # print(str(self.agent.Position))
         deltaYaw = angles.CalcDeltaYaw(self.agent.Position, targetLocation)
 
-        # If the agent's direction is within 5 degrees of the location it is fine
+        # If the agent's direction is within maxAngle degrees of the location it is fine
         if abs(deltaYaw) < maxAngle:
             return True
 
@@ -99,6 +98,12 @@ class Movement:
 
         self.SendCommand("turn " + str(sp))
         return False
+
+    def SetPitchTo(self, targetLocation):
+        sp = angles.CalcTargetPitch(self.agent.Position, targetLocation)
+        self.SendCommand("setPitch " + str(sp))
+        return True
+
 
     def TryPitchTo(self, targetLocation, maxAngle = 5):
         """ Makes the agent turn and look at a location """

@@ -11,9 +11,22 @@ def CalcDAngle(dA, dB, maxAngle, curAngle):
 
     return dangle
 
+def CalcTargetPitch(agent, location):
+    dx = max(abs(location[0] - agent[0]), 0.01)
+    dy = max(abs(location[1] - (agent[1] + 1.5)), 0.01)
+
+    return math.atan2(dy, dx) * float(180/math.pi)
+
 def CalcDeltaPitch(agent, location):
+    """
+        Calculate the difference in pitch between the agent and the required ptich
+    """
+
     dx = max(abs(location[0] - agent[0]), 1)
-    dy = max(abs(location[1] - agent[1]), 1)
+    dy = max(abs(location[1] - (agent[1] + 1.5)), 1)
+     # Magic numbers: the 1.5 is the height of the face
+
+    return CalcTargetPitch(agent, location) - agent[4]
 
     deltaPitch = CalcDAngle(dy, dx, 90, agent[4])
 
