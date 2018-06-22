@@ -26,16 +26,37 @@ class Movement:
             if self.TryPitchTo(location, maxAngle = maxangle):
                 return True
 
+
+
+    def MoveToLocation(self, targetLocation, distance = 0):
+        # Reset movement every step
+        self.SendCommand("move 0")
+        self.SendCommand("pitch 0")
+        self.SendCommand("turn 0")
+
+        # Turn towards the location in the XZ plane
+        if not self.yawd:
+            if self.TryTurnTo(targetLocation):
+                self.yawd = True
+
+        # Move towards it
+        if self.yawd and not self.movd:
+            di = spatial.dist(targetLocation[0] - self.agent.Position[0], targetLocation[2] - self.agent.Position[2])
+
+            if di > distance:
+                sp = min(1, di)
+                self.SendCommand("move " + str(sp))
+            else:
+                self.movd = True
+
+        return self.movd
+
     def MoveLookAtLocation(self, targetLocation, distance = 0):
         """
             The agent moves to a location in world-space
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
-
-        self.yawd = False
-        self.movd = False
-        self.pitd = False
 
         # Reset movement every step
         self.SendCommand("move 0")

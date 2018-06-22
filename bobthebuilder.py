@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from tools import spatial
-
+from task import build
 
 from builtins import range
 import MalmoPython
@@ -106,10 +106,21 @@ server.agents[0].SendCommand("hotbar.4 0")
 
 st = [False]*(len(grid)+1)
 st[0] = True
+
+b = build.BuildTask(server.agents[0], (5,226,4))
+print (b.grid)
+
 while server.IsRunning():
     observes = server.Observe()
     if observes[0][0]:
+        if b.Execute(server.agents[0]):
+            print("Done")
+            break
+
+
+        continue
         pos = server.agents[0].Position
+        print(tmo.CalcBuildingBlocks(pos))
 
 
         # Bare bones, place a block on all blocks in the grid
@@ -119,8 +130,6 @@ while server.IsRunning():
             else:
                 if server.agents[0].PlaceBlock(l):
                     st[i+1] = True
-                #else:
-                #    print(observes[0][1].get(u'LineOfSight',""))
 
         if all(st):
             break

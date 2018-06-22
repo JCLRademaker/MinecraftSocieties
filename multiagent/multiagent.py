@@ -145,40 +145,6 @@ class MultiAgent:
 
         return False, False
 
-    def AdjustPreferences(self):
-        self.Preference = []
-        inv = self.GetInventory(self.data[u'inventory'], "inventory")
-        # Get stats for reasoning
-        hunger = int(self.data[u'Food'])
-        health = self.data[u'Life']
-
-        # HP/Hunger
-        if health < self.hpThreshold or hunger < self.hungerThreshold:
-            self.Preference.append("replenish")
-
-        # Food gathering
-        if self.GetAmountOfType(inv, "melon") < self.foodThreshold:
-            self.Preference.append("gather")
-
-        # Mining
-        if self.GetAmountOfType(inv, "log") + self.GetAmountOfType(inv, "cobblestone") < self.mineThreshold:
-            self.Preference.append("mine")
-
-        # Scouting
-        if len(self.block_list) < self.scoutThreshold:
-            self.Preference.append("scout")
-
-        # Build has priority if the rest wasn't appended
-        self.Preference.append("build")
-
-        # Check if all the preference entries are in the list
-        for pref in self.AllPreferences:
-            if pref not in self.Preference:
-                self.Preference.append(pref)
-
-    def GetPreferences(self):
-        preference = (self.name, self.Preference)
-        return preference
 
     def GetChat(self):
         """
@@ -255,25 +221,71 @@ class MultiAgent:
         """ Look at the top of a block in 3D coordinates """
 
         # Calcualte the center of the block
-        tLoc = (location[0] +  0.6, location[1] + 1, location[2] +  0.6)
-        return self.LookAtLocation(tLoc, 0.5)
+        tLoc = (location[0] +  0.5, location[1] + 1, location[2] +  0.5)
+        return self.LookAtLocation(tLoc, 0.3)
+
+    def MoveToLocation(self, location, distance = 0):
+        """  """
+        self.mov.yawd = False
+        self.mov.movd = False
+
+        return self.mov.MoveToLocation(location, distance)
 
     def PlaceBlock(self, targetLocation):
         """ Looks at middle of where a block should be, then place it """
-        if self.LookAtopBlock(targetLocation):
-            self.SendCommand("use 1")
-            self.SendCommand("use 0")
-            time.sleep(0.01)
 
+
+        if self.LookAtopBlock(targetLocation):
             raydat = self.data.get(u'LineOfSight',False)
 
             if raydat:
                 if raydat[u'y'] > targetLocation[1]+1:
-                    print(self.data.get(u'LineOfSight',""))
-                    print("placed")
                     return True
 
+            self.SendCommand("use 1")
+            self.SendCommand("use 0")
+            time.sleep(0.1)
+
         return False
+
+# ==============================================================================
+# ============================== Preferences ofzo ==============================
+# ==============================================================================
+
+    def AdjustPreferences(self):
+        self.Preference = []
+        inv = self.GetInventory(self.data[u'inventory'], "inventory")
+        # Get stats for reasoning
+        hunger = int(self.data[u'Food'])
+        health = self.data[u'Life']
+
+        # HP/Hunger
+        if health < self.hpThreshold or hunger < self.hungerThreshold:
+            self.Preference.append("replenish")
+
+        # Food gathering
+        if self.GetAmountOfType(inv, "melon") < self.foodThreshold:
+            self.Preference.append("gather")
+
+        # Mining
+        if self.GetAmountOfType(inv, "log") + self.GetAmountOfType(inv, "cobblestone") < self.mineThreshold:
+            self.Preference.append("mine")
+
+        # Scouting
+        if len(self.block_list) < self.scoutThreshold:
+            self.Preference.append("scout")
+
+        # Build has priority if the rest wasn't appended
+        self.Preference.append("build")
+
+        # Check if all the preference entries are in the list
+        for pref in self.AllPreferences:
+            if pref not in self.Preference:
+                self.Preference.append(pref)
+
+    def GetPreferences(self):
+        preference = (self.name, self.Preference)
+        return preference
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
