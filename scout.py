@@ -32,7 +32,7 @@ def dist(coordinatesA, coordinatesB):
 
 # Coordinates to randomly spawn a tree on
 # -- set up the mission --
-xml = superflatWorld.ReturnMissionXML("\"true\"", superflatWorld.MakeFarmLand(), superflatWorld.ReturnMobTypes())
+xml = superflatWorld.ReturnMissionXML("\"true\"")
 
 # ==============================================================================
 # =========================== Initializing the Agent ===========================
@@ -91,10 +91,12 @@ while agent.is_mission_running:
 
 
     # Debugging code pls ignore
-    if counter % 100 == 5:
-        print("Map update {}!" + str(counter // 100))
-        for row in agent.big_map[(0,0)]:
-            print(row)
+    # if counter % 100 == 5:
+     #   print("Map update {}!" + str(counter // 100))
+
+    print(agent.block_list)
+       # for row in agent.big_map[(0,0)]:
+           # print(row)
     #     for map_key in agent.big_map:
     #         print("New small map", map_key)
     #         for row in agent.big_map[map_key]:

@@ -35,7 +35,8 @@ def returnItems(itemtype, agent):
             agent.SendCommand("use 0")      
             return True
     return False
-  
+
+
 """ Move the agent to its specified home coordinates"""   
 def goHome(agent):
     return agent.MoveLookAtBlock(agent.home)
@@ -60,6 +61,7 @@ def moveToResource(resource, agent):
     resourceList = agent.block_list[resource]
     location = resourceList[0]
     return agent.MoveLookAtBlock(location)    
+
 
 """ 
 Look for the given resource in your vicinity grid
@@ -90,6 +92,7 @@ def harvestResource(resource, agent):
             agent.SendCommand("attack 0")
 
         return not target                    
+
 
 """
 Scavenges the ground for harvested resources to collect

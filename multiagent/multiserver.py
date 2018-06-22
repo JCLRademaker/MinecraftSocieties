@@ -55,6 +55,11 @@ class MultiServer:
         if time.time() - start_time >= time_out:
             print("Timed out while waiting for mission to start - bailing.")
             exit(1)
+
+        # Set initial world things - the initial agent will just poison everyone
+        agent_hosts[0].SendCommand('chat /gamemode survival')
+        agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 4 200')
+
         print()
         print("Mission has started.")
 
@@ -79,6 +84,33 @@ class MultiServer:
             res.append(a.Observe())
 
         return res
+
+    def ReasonOnPreferences(self):
+        """
+            Observes preferences of all agents and 
+            creates a global preference list 
+            based on the borda rule
+        """
+        individualPrefs = []
+        scores = {"scout": 0, "gather": 0, "mine": 0, "build": 0}
+        
+        for a in self.agents:
+            individualPrefs.append(a.GetPreferences())
+        
+        # Add all the preferences of the agents to the total
+        # According to the Borda rule
+        for a in individualPrefs:
+            preferences = a[1]
+            priority = 3
+            
+            for pref in preferences:
+                if pref is not "replenish":
+                    scores[pref] += priority
+                priority -= 1    
+
+        # Sort based on Borda scores                
+        scores = sorted(scores.items(), key=lambda x: x[1], reverse = True)
+        return scores
 
     def GetChat(self):
         """

@@ -61,6 +61,7 @@ class Agent:
         self.big_map = {}
         self.block_list = {}
         self.home = (0, 61, 0) # TODO: Set dynamically at spawn
+        self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom"]
 
         # Task queue
         self.taskList = list()
@@ -432,9 +433,9 @@ class Agent:
         if map_key not in self.big_map:
             self.big_map[map_key] = [[False for _ in range(100)] for _ in range(100)]
 
-        if not self.big_map[map_key][block_position[1] % 100][block_position[0] % 100]:
-            self.big_map[map_key][block_position[1] % 100][block_position[0] % 100] = block_value
-            if block_value != "air":  # TODO: More filtering on non-interesting block types
+        if not self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)]:
+            self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)] = block_value
+            if block_value not in self.scoutingBlacklist:  # TODO: More filtering on non-interesting block types
                 if block_value not in self.block_list:
                     self.block_list[block_value] = [block_position]
                 else:
@@ -470,19 +471,24 @@ class Agent:
       Returns true when the task is done and removed from the queue
     """
     def doCurrentTask(self):
-        if len(self.taskList) > 0: # Look for tasks
+        if len(self.taskList) > 0:  # Look for tasks
             task = self.taskList[0]
-            if task[0](*task[1:], agent = self): #Perform the task and remove the task from the queue if its finished
+            if len(task) > 1:
+                func = task[0](*task[1:], agent=self)
+            else:
+                func = task[0](agent=self)
+
+            if func:  # Perform the task and remove the task from the queue if its finished
                 print(str(task[0]) + " completed.")
                 del self.taskList[0]
                 time.sleep(0.5)
-                return True # Task is done and removed 
-        return False #Not doing a task / task is not done yet 
+                return True  # Task is done
+        return False  # Not doing a task / task is not done yet
 
     """
       Add a task to the agents task list
-	  Tasks are in the form of (functionCall(), paramA, paramB)
-    """
+      Tasks are in the form of (functionCall(), paramA, paramB)
+	  """
     def addTask(self, task):
          self.taskList.append(task)
 

@@ -29,8 +29,7 @@ def CreateAgentXML(name, coords = "", inventory = ""):
 
                        <!-- movement -->
                        <ContinuousMovementCommands turnSpeedDegs="180"/>
-                  	   <AbsoluteMovementCommands/>
-
+                       <AbsoluteMovementCommands/>
 
                         <!-- Chat -->
                         <ChatCommands/>

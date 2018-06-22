@@ -25,22 +25,22 @@ def MakeDrawingDecorator():
                          '"' + '/>'
 
     # ...Then create the farm plot
-    for x in range(11, 16):
-        for y in range(11, 16):
-            if x == 13 and (y == 12 or y == 13 or y == 14):
-                # Water is needed to keep the farmland hydrated (hydrates max 4 tiles around 1 water)
-                block_type = "water"
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
-            else:
-                # You first need farmland
-                block_type = "farmland"
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
-                # Then you can place carrots on top of that
-                block_type = crop_types[random.randint(0, len(crop_types)-1)]
-                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(y) + '"' + \
-                                     ' type="' + block_type + '"' + '/>'
+    # for x in range(11, 16):
+    #     for y in range(11, 16):
+    #         if x == 13 and (y == 12 or y == 13 or y == 14):
+    #             # Water is needed to keep the farmland hydrated (hydrates max 4 tiles around 1 water)
+    #             block_type = "water"
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
+    #         else:
+    #             # You first need farmland
+    #             block_type = "farmland"
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(59) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
+    #             # Then you can place carrots on top of that
+    #             block_type = crop_types[random.randint(0, len(crop_types)-1)]
+    #             drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(y) + '"' + \
+    #                                  ' type="' + block_type + '"' + '/>'
 
     # AAAAAAAAAHHHHH
     block_type = "stone"
@@ -67,7 +67,7 @@ def ReturnMobTypes():
     return mobs
 
 # Mission XML
-def ReturnMissionXML(forceReset, d_decorator, mob_types):
+def ReturnMissionXML(forceReset):
     missionXML = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
             <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <About>
@@ -81,10 +81,10 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                         </Time>
                         <Weather>clear</Weather>
                         <AllowSpawning>true</AllowSpawning>
-                        <AllowedMobs>''' + mob_types + '''</AllowedMobs>
+                        <AllowedMobs>''' + ReturnMobTypes() + '''</AllowedMobs>
                     </ServerInitialConditions>
                     <ServerHandlers>
-                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
+                        <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + MakeDrawingDecorator() + '''
                         <ServerQuitFromTimeUp timeLimitMs="100000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
