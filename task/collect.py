@@ -1,4 +1,4 @@
-import Task
+from task import Task
 
 class CollectTask(Task):
     def __init__(self, agent, resource):
