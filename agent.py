@@ -11,7 +11,11 @@ import sys
 import time
 import json
 import math
+
+from PIL import Image
+
 import tasks
+
 
 # Named tuple consisting of info on entities
 EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
@@ -23,16 +27,21 @@ InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 # Mapping from which resources can be gathered by which tools
 resourceToToolMapping = { u'log' : "wooden_axe"}
 
+# Mapping only for the function for making maps. Real convenient.
+colourMapping = {"air": (128, 128, 128), "tallgrass": (128, 128, 127), "dirt": (125,128,128),
+                 "double_plant": (127,128,128), "red_flower": (126,128,128), "yellow_flower": (128,127,128),
+                 "vine":(129,128,128),
+                 "potatoes": (0, 255, 0), "beetroots": (0,254,0), "carrots": (0,253,0), "brown_mushroom": (1,255,0),
+                 "stone": (0,0,255), "coal_ore": (166,42,42), "iron_ore": (166,41,42),
+                 "log": (165, 42, 42), "log2": (164, 42, 42),
+                 "ender_chest": (255, 192, 203)}
+
 if sys.version_info[0] == 2:
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
 else:
     import functools
     print = functools.partial(print, flush=True)
 
-# TODO:
-# Why is this here?
-isCollecting = False
-isDroppingOff = False
 
 # ==============================================================================
 # ========================== The Generic Agent Object ==========================
@@ -58,11 +67,10 @@ class Agent:
             self.chatter = chat.ChatClient(name)
 
         # ??????
-        self.big_map = {}
         self.block_list = {}
+
         self.home = (0, 61, 0) # TODO: Set dynamically at spawn
         self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom"]
-
         # Task queue
         self.taskList = list()
 
@@ -401,15 +409,47 @@ class Agent:
 # ============================ Maintaining a Map ===============================
 # ==============================================================================
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def UpdateMapFull(self, worldmap):
         # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
         # Update the big_map property to reflect the observed squares
         # Update the block_list of all noteworthy blocks found.
+
+        # Check which maps are needed, and load them in :
+        corners = [(0,12), (12,0), (0,0), (12,12)]
+        maps = {}
+        for (i,j) in corners:
+            block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
+            map_key = (block_position[0] // 100, block_position[1] // 100)
+            try:
+                map = Image.open("map{}{}.png".format(map_key[0],map_key[1]))
+            except IOError:
+                map = Image.new("RGB", (100,100), "black")
+            maps[map_key] = (map.load(), map)
+
+        # Update the pixel maps with the newly found information
         for i in range(13):
             for j in range(13):
                 block_value = worldmap[13 * i + j]
                 block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
-                self.UpdateMapBlock(block_value, block_position)
+                self.UpdateMapBlock(block_value, block_position, maps)
+
+        # Save the used maps back to where they came from
+        for map_key in maps:
+            maps[map_key][1].save("map{}{}.png".format(map_key[0],map_key[1]))
 
 
     def UpdateMapEfficient(self, worldmap):
@@ -417,25 +457,43 @@ class Agent:
         # Update the big_map to reflect the observed squares
         # Update the block_list of all noteworthy blocks found.
         # Efficient only updates the outer rim of the observed field, rather than the entire field.
+
+        # Check which maps are needed, and load them in :
+        corners = [(0, 12), (12, 0), (0, 0), (12, 12)]
+        maps = {}
+        for (i, j) in corners:
+            block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
+            map_key = (block_position[0] // 100, block_position[1] // 100)
+            try:
+                map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
+            except IOError:
+                map = Image.new("RGB", (100, 100), "black")
+            maps[map_key] = (map.load(), map)
+
+        # Update the pixel maps with the newly found information
         for i in range(13):
             for j in (0,12):
                 block_value = worldmap[13 * i + j]
                 block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
-                self.UpdateMapBlock(block_value, block_position)
+                self.UpdateMapBlock(block_value, block_position, maps)
 
                 block_value = worldmap[13 * j + i]
                 block_position = (math.floor(self.Position[0]) - 6 + i, math.floor(self.Position[2]) - 6 + j)
-                self.UpdateMapBlock(block_value, block_position)
+                self.UpdateMapBlock(block_value, block_position, maps)
 
-    def UpdateMapBlock(self, block_value, block_position):
+        # Save the used maps back to where they came from
+        for map_key in maps:
+            maps[map_key][1].save("map{}{}.png".format(map_key[0], map_key[1]))
+
+
+    def UpdateMapBlock(self, block_value, block_position, maps):
         map_key = (block_position[0] // 100, block_position[1] // 100)
-        # Generate a new chunk of map if necessary
-        if map_key not in self.big_map:
-            self.big_map[map_key] = [[False for _ in range(100)] for _ in range(100)]
-
-        if not self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)]:
-            self.big_map[map_key][int(block_position[1] % 100)][int(block_position[0] % 100)] = block_value
-            if block_value not in self.scoutingBlacklist:  # TODO: More filtering on non-interesting block types
+        if maps[map_key][0][block_position[1] % 100, block_position[0] % 100] == (0, 0, 0):
+            try:
+                maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = colourMapping[block_value]
+            except KeyError:
+                maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = (255, 255, 255)
+            if block_value not in self.scoutingBlacklist:
                 if block_value not in self.block_list:
                     self.block_list[block_value] = [block_position]
                 else:
@@ -445,7 +503,17 @@ class Agent:
         # Input: (x,y,z) coordinate tuple, of which the Y is not used.
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (coordinates[0] // 100, coordinates[2] // 100)
-        return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]
+        try:
+            map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
+        except IOError:
+            return False
+        pixels = map.load()
+        if pixels[coordinates[2] % 100,coordinates[0] % 100] == (0,0,0):
+            return False
+        for key in colourMapping:
+            if colourMapping[key] == pixels[coordinates[2] % 100,coordinates[0] % 100]:
+                return key
+        return "unknown"
 
 # ==============================================================================
 # ============================ Vision methods ==================================
