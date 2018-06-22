@@ -13,6 +13,9 @@ import random
 import json
 import errno
 import math
+
+
+
 from collections import namedtuple
 
 # Named tuple consisting of info on entities
@@ -32,7 +35,7 @@ def dist(coordinatesA, coordinatesB):
 
 # Coordinates to randomly spawn a tree on
 # -- set up the mission --
-xml = superflatWorld.ReturnMissionXML("\"true\"", superflatWorld.MakeFarmLand(), superflatWorld.ReturnMobTypes())
+xml = superflatWorld.ReturnMissionXML("\"true\"", superflatWorld.MakeDrawingDecorator(), superflatWorld.ReturnMobTypes())
 
 # ==============================================================================
 # =========================== Initializing the Agent ===========================
@@ -43,7 +46,6 @@ agent.StartMission()
 
 target_reached = True
 counter = 0
-
 
 # ==============================================================================
 # =========================== Implementing the Agent ===========================
@@ -60,7 +62,7 @@ while agent.is_mission_running:
             counter+=1
             if counter == 1:
                 agent.UpdateMapFull(blocks)
-                target = (0,63,0) # TODO: Make equal to agent starting position
+                target = (0, 63, 0) # TODO: Make equal to agent starting position
 
 
         #Select a scouting destination, then move there:
@@ -70,15 +72,15 @@ while agent.is_mission_running:
             old_target = target
             for i in range(int(radius/2)):
                 x = randint(-radius, radius)
-                z = choice([1,-1])*(radius - abs(x))
+                z = choice([1,- 1])*(radius - abs(x))
                 check_coordinates = (old_target[0] + x, old_target[1], old_target[2] + z)
                 if not agent.CheckMap(check_coordinates):
-                    score = dist(check_coordinates, agent.home) + randint(-5,5)
+                    score = dist(check_coordinates, agent.home)
                     if score < min_score:
                         target = check_coordinates
                         min_score = score
                         target_reached = False
-            radius += 5
+            radius += 6
         agent.MoveLookAtBlock(target)
         if dist(agent.Position, target) < 6:
             target_reached = True
@@ -92,9 +94,9 @@ while agent.is_mission_running:
 
     # Debugging code pls ignore
     if counter % 100 == 5:
-        print("Map update {}!" + str(counter // 100))
-        for row in agent.big_map[(0,0)]:
-            print(row)
+        print("Map update {}!".format(str(counter // 100)))
+        for block in agent.block_list:
+            print(block)
     #     for map_key in agent.big_map:
     #         print("New small map", map_key)
     #         for row in agent.big_map[map_key]:

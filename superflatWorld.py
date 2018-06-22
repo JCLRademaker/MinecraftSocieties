@@ -82,7 +82,7 @@ def ReturnMissionXML(forceReset, d_decorator, mob_types):
                     </ServerInitialConditions>
                     <ServerHandlers>
                         <FlatWorldGenerator generatorString="3;57*1,2*3,2;35;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + d_decorator + '''
-                        <ServerQuitFromTimeUp timeLimitMs="100000"/>
+                        <ServerQuitFromTimeUp timeLimitMs="1000000"/>
                         <ServerQuitWhenAnyAgentFinishes/>
                     </ServerHandlers>
                 </ServerSection>
