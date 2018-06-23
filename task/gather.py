@@ -17,25 +17,27 @@ class GatherTask(Task):
         task.reachedResource = agent.MoveLookAtBlock(location)
         raydat = agent.data.get(u'LineOfSight',False)
         
+        print("plz go to " + str(location))
         # attack if we are looking at a tree
         if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
             # equip item
             if u'inventory' in agent.data:
-                inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
-                agent.EquipToolForResource(task.r, inv)
+                if not task.r == u'melon_block': # Melons dont need tasks (solve in mapping later)
+                    inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
+                    agent.EquipToolForResource(task.r, inv)
                 
             agent.SendCommand("attack 1")
             agent.SendCommand("yaw 0")
             agent.SendCommand("pitch 0")
-        elif task.reachedResource and raydat[u'type'] == task.r and raydat["hitType"] == "block" :   # if we reached the tree attack
+        elif task.reachedResource and raydat and raydat[u'type'] == task.r and raydat["hitType"] == "block" :   # if we reached the tree attack
             agent.SendCommand("attack 1")
-        elif task.reachedResource and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):   # if the tree is gone stop
+        elif task.reachedResource and raydat and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):   # if the tree is gone stop
             agent.SendCommand("attack 0")
             agent.SendCommand("setPitch 0")
             return True
         else:
             agent.SendCommand("attack 0")
-
+        print("Ik ben nog NIET klaar")
         return False
     
    

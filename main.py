@@ -1,4 +1,5 @@
 from __future__ import print_function
+import operator
 from collections import namedtuple
 from multiagent import multiserver, createMissionXML
 from task import build, scout, collect, gather, handIn
@@ -22,14 +23,15 @@ server.agents[1].SendMessage("Hoi", target="Jan")
 
 while server.IsRunning():
     success, obser = server.Observe()       # Call all Agent.Observe for init
-    prefScores = server.ReasonOnPreferences()     # Call all Agent.Preferences (for voting)
     chats = server.GetChat()                # Call all Agent.GetChat
 
     if success:
-        server.agents[0].doCurrentTask()
-        server.agents[1].doCurrentTask()
-        for i, score in enumerate(prefScores):
-            pass
+        for agent in server.agents:
+            # Reason about a new thing to do (if returns false)
+            if not agent.doCurrentTask():
+                scores = server.ReasonOnPreferences()
+                priority = max(scores.iteritems(), key=operator.itemgetter(1))[0]
+                agent.SetPreferencesFromVote(priority)
 
         for i, chat in enumerate(chats):
             if chat[0]:
@@ -37,4 +39,4 @@ while server.IsRunning():
                     print(str(msg))
 
     # Give agent time to process
-    time.sleep(0.1)
+    time.sleep(0.3)
