@@ -18,9 +18,12 @@ class ScoutTask(Task):
         
     def Execute(task, agent):
         if agent.InformationCount() >= task.goal:
-            print("Done Scouting")
-            agent.SendCommand("move 0")
+            chests = agent.block_list["chest"]
+            chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
             return True
+            if agent.MoveToLocation(chestLocation, distance = 3):
+                agent.SendCommand("move 0")
+                return True
         else:
             if "worldGrid" in agent.data:
                 blocks = agent.data.get(u'worldGrid', 0)

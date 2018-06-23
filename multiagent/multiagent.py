@@ -67,14 +67,13 @@ class MultiAgent:
 
         # Task queue - scouting is the initial task for all agents
         self.taskList = list()
-        self.addTask(scout.ScoutTask(self, 11))
-        self.addTask(gather.GatherTask(self, u'log'))
-        self.addTask(collect.CollectTask(self, "log"))
-        self.addTask(handIn.HandInTask(self, u'log'))
+        self.addTask(scout.ScoutTask(self, 20))
 
         # All preferences (in order) and initial preference list
         self.AllPreferences = ["build", "scout", "gather", "mine", "replenish"]
         self.Preference = ["scout", "gather", "mine", "build", "replenish"]
+        # For getting the results of the Borda voting (so that a task can be pushed to the queue)
+        self.priority = ""
 
         # Thresholds for determining preferences (can be changed, just initial numbers here)
         self.hpThreshold = 10
@@ -294,7 +293,7 @@ class MultiAgent:
             self.Preference.append("mine")
 
         # Scouting
-        if len(self.block_list) < self.scoutThreshold:
+        if self.InformationCount() < self.scoutThreshold:
             self.Preference.append("scout")
 
         # Build has priority if the rest wasn't appended
@@ -308,6 +307,35 @@ class MultiAgent:
     def GetPreferences(self):
         preference = (self.name, self.Preference)
         return preference
+        
+    def SetPreferencesFromVote(self, _priority):   
+        self.priority = _priority
+        
+        # Replenishing always has priority #weWantToLive
+        if self.Preference[0] == "replenish":
+            print("I need a replenish task")
+            # 1. Go to chest
+            # 2. Grab slot from chest (can only retrieve in stacks)
+            # 3. Use item of type melon until hunger >18
+            # 4. Put melon pieces back in chest
+            # 5. Done
+           # while self.data[u'Hunger'] < 18:
+           #      self.addTask(replenish.ReplenishTask(self, 10))
+        
+        # Add task(s) based on priority
+        if self.priority == "mine":
+            self.addTask(gather.GatherTask(self, u'log'))
+            self.addTask(collect.CollectTask(self, "log"))
+            self.addTask(handIn.HandInTask(self, u'log'))
+        elif self.priority == "gather":
+            print("added melon task")
+            self.addTask(gather.GatherTask(self, u'melon_block'))
+            self.addTask(collect.CollectTask(self, "melon"))
+            self.addTask(handIn.HandInTask(self, u'melon'))
+        elif self.priority == "build":
+            self.addTask(build.BuildTask(self, (10,61,10)))
+        else:
+            self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
@@ -547,12 +575,13 @@ class MultiAgent:
     """
 
     def doCurrentTask(self):
-        if len(self.taskList) > 0: 
+        if len(self.taskList) > 0:  # We have a task to do
             task = self.taskList[0]
             if task.Execute(self):
                 del self.taskList[0] 
                 print("task deleted")
-                return True
+            return True
+        # We have to find something new to do
         return False
 
     """
