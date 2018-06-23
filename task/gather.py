@@ -1,4 +1,9 @@
 from task import Task
+from collections import namedtuple
+
+# Create a named tuple type for the inventory contents.
+InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity, inventory, index')
+InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
 class GatherTask(Task):
     def __init__(self, agent, resource):
@@ -8,9 +13,9 @@ class GatherTask(Task):
 
     def Execute(task, agent):
         if not task.reachedResource:    # go to know resource spot
-            resourceList = agent.block_list[resource]
-            location = resourceList[0]
-            task.reachedResource = agent.MoveLookAtBlock(location)    
+            resourceList = agent.block_list[task.r]
+            location = (resourceList[0][0], 62, resourceList[0][1])
+            task.reachedResource = agent.MoveToLocation(location,  distance = 4)
             return False
         elif "worldGrid" in agent.data:  # harvest resource
             blocks = agent.data.get(u'worldGrid', 0)
@@ -24,13 +29,15 @@ class GatherTask(Task):
                     target = True       
                     if u'inventory' in agent.data:
                         inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
-                        agent.EquipToolForResource(self.r, inv)
+                        agent.EquipToolForResource(task.r, inv)
                     break								
             
             # If resource found, harvest it otherwise stop attacking
             if target:
                 if agent.MoveToRelBlock(index):
                     agent.SendCommand("attack 1")
+                else:
+                    agent.SendCommand("attack 0")   
             else:
                 agent.SendCommand("attack 0")
 

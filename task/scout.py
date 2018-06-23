@@ -17,9 +17,9 @@ class ScoutTask(Task):
         return abs(coordinatesA[0] - coordinatesB[0]) + abs(coordinatesA[2] - coordinatesB[2])
         
     def Execute(task, agent):
-        print(agent.InformationCount())
         if agent.InformationCount() >= task.goal:
             print("Done Scouting")
+            agent.SendCommand("move 0")
             return True
         else:
             if "worldGrid" in agent.data:

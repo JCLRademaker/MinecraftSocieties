@@ -68,6 +68,7 @@ class MultiAgent:
         # Task queue - scouting is the initial task for all agents
         self.taskList = list()
         self.addTask(scout.ScoutTask(self, 11))
+        self.addTask(gather.GatherTask(self, u'log'))
 
         # All preferences (in order) and initial preference list
         self.AllPreferences = ["build", "scout", "gather", "mine", "replenish"]
@@ -199,6 +200,8 @@ class MultiAgent:
 
     def MoveToRelative(self, index):
         """ Move to a block at a certain index in the observable grid """
+        self.mov.yawd = False
+        self.mov.pitd = False
         return self.mov.MoveLookAtLocation(spatial.LocationFromIndex(self.Position, index))
 
     def LookAtBlock(self, location):
@@ -228,6 +231,8 @@ class MultiAgent:
             targetLocation: a tuple with (X, Y, Z) coordinates of the target area
             returns: returns a boolean whether or not the agent has arrived
         """
+        self.mov.yawd = False
+        self.mov.pitd = False
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
 
@@ -242,6 +247,7 @@ class MultiAgent:
         """  """
         self.mov.yawd = False
         self.mov.movd = False
+        self.mov.pitd = False
 
         return self.mov.MoveToLocation(location, distance)
 
@@ -543,6 +549,7 @@ class MultiAgent:
             task = self.taskList[0]
             if task.Execute(self):
                 del self.taskList[0] 
+                print("task deleted")
                 return True
         return False
 
