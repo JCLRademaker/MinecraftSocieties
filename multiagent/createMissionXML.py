@@ -30,7 +30,7 @@ def MakeDrawingDecorator():
     drawing_decorator += '<DrawSphere x="' + str(-50) + '" y="' + str(60) + '" z="' + str(50) + \
                          '" radius="' + str(20) + '"' + ' type="' + block_type + '"' + '/>'
     # Chest.
-    block_type = "ender_chest"
+    block_type = "chest"
     drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
                          ' type="' + block_type + '"' + '/>'
     # ... And done!

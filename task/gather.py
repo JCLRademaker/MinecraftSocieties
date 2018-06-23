@@ -27,7 +27,7 @@ class GatherTask(Task):
             agent.SendCommand("attack 1")
             agent.SendCommand("yaw 0")
             agent.SendCommand("pitch 0")
-        elif task.reachedResource and raydat[u'type'] == task.r :   # if we reached the tree attack
+        elif task.reachedResource and raydat[u'type'] == task.r and raydat["hitType"] == "block" :   # if we reached the tree attack
             agent.SendCommand("attack 1")
         elif task.reachedResource and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):   # if the tree is gone stop
             agent.SendCommand("attack 0")

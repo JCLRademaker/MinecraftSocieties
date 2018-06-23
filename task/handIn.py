@@ -6,15 +6,15 @@ class HandInTask(Task):
         self.r = resource
 
     def Execute(task, agent):
-        chests = agent.block_list["ender_chest"]
-        chestLocation = (chests[0][0], 60, chests[0][1])
+        chests = agent.block_list["chest"]
+        chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
         
         if agent.MoveLookAtBlock(chestLocation):
             if u'inventoriesAvailable' in agent.data:
                 # Adds items of a specified type to the chest
                 agent.SendCommand("move 0")
                 agent.SendCommand("setPitch 0")
-                agent.AddItemsToChest(agent.data[u'inventoriesAvailable'], agent.data[u'inventory'], "enderchest", task.r)
+                agent.AddItemsToChest(agent.data[u'inventoriesAvailable'], agent.data[u'inventory'], "chest", task.r)
                 return True
         return False
             
