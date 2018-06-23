@@ -7,7 +7,7 @@ class ScoutTask(Task):
         Task.__init__(self, agent)
         self.goal = infoGoal
         self.counter = 0
-        self.target = (0, 63, 0)
+        self.target = (0, 61, 0)
         self.target_reached = True
         
     def dist(self, coordinatesA, coordinatesB):
@@ -28,7 +28,7 @@ class ScoutTask(Task):
                 task.counter+=1
                 if task.counter == 1:
                     agent.UpdateMapFull(blocks)
-                    task.target = (0, 63, 0) # TODO: Make equal to agent starting position
+                    task.target = (0, 61, 0) # TODO: Make equal to agent starting position
 
 
             #Select a scouting destination, then move there:

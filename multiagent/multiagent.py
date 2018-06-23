@@ -26,8 +26,8 @@ resourceToToolMapping = { u'log' : "iron_axe"}
 # Mapping only for the function for making maps. Real convenient.
 colourMapping = {"air": (128, 128, 128), "tallgrass": (128, 128, 127), "dirt": (125,128,128),
                  "double_plant": (127,128,128), "red_flower": (126,128,128), "yellow_flower": (128,127,128),
-                 "vine":(129,128,128),
-                 "potatoes": (0, 255, 0), "beetroots": (0,254,0), "carrots": (0,253,0), "brown_mushroom": (1,255,0),
+                 "vine":(129,128,128), 
+                 "brown_mushroom": (1,255,0),
                  "stone": (0,0,255), "coal_ore": (166,42,42), "iron_ore": (166,41,42),
                  "log": (165, 42, 42), "log2": (164, 42, 42),
                  "ender_chest": (255, 192, 203)}
@@ -478,15 +478,16 @@ class MultiAgent:
 
     def UpdateMapBlock(self, block_value, block_position, maps):
         map_key = (block_position[0] // 100, block_position[1] // 100)
-        if maps[map_key][0][block_position[1] % 100, block_position[0] % 100] == (0, 0, 0):
-            try:
-                maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = colourMapping[block_value]
-            except KeyError:
-                maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = (255, 255, 255)
-            if block_value not in self.scoutingBlacklist:
-                if block_value not in self.block_list:
-                    self.block_list[block_value] = [block_position]
-                else:
+        #if maps[map_key][0][block_position[1] % 100, block_position[0] % 100] == (0, 0, 0):
+        try:
+            maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = colourMapping[block_value]
+        except KeyError:
+            maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = (255, 255, 255)
+        if block_value not in self.scoutingBlacklist:
+            if block_value not in self.block_list:
+                self.block_list[block_value] = [block_position]
+            else:
+                if block_position not in self.block_list[block_value]:
                     self.block_list[block_value].append(block_position)
 
     def CheckMap(self, coordinates):
@@ -512,7 +513,7 @@ class MultiAgent:
         for type in self.block_list:
             count += len(self.block_list[type])
         
-        print(count)
+        print(self.block_list)
         return count
 
     # ==============================================================================
