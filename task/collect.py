@@ -1,4 +1,8 @@
 from task import Task
+from collections import namedtuple
+
+# Named tuple consisting of info on entities
+EntityInfo = namedtuple('EntityInfo', 'x, y, z, name, quantity')
 
 class CollectTask(Task):
     def __init__(self, agent, resource):
@@ -16,6 +20,8 @@ class CollectTask(Task):
                     agent.MoveToLocation((ent.x, ent.y, ent.z))                     
                     break	
             
-            return not target # Return if the task is done (no more target entities)    
-            
+            if not target:
+                agent.SendCommand("move 0")# Return if the task is done (no more target entities)    
+                return True
+                
         return False
