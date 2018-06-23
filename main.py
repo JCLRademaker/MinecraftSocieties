@@ -19,8 +19,6 @@ server.StartServer(agents)
 # ========================= Implementing the Server ============================
 # ==============================================================================
 server.agents[1].SendMessage("Hoi", target="Jan")
-s = scout.ScoutTask(server.agents[0], 11)
-server.agents[0].addTask(s)
 
 while server.IsRunning():
     success, obser = server.Observe()       # Call all Agent.Observe for init
@@ -29,6 +27,7 @@ while server.IsRunning():
 
     if success:
         server.agents[0].doCurrentTask()
+        server.agents[1].doCurrentTask()
         for i, score in enumerate(prefScores):
             pass
 
