@@ -70,6 +70,7 @@ class MultiAgent:
         self.addTask(scout.ScoutTask(self, 11))
         self.addTask(gather.GatherTask(self, u'log'))
         self.addTask(collect.CollectTask(self, "log"))
+        self.addTask(handIn.HandInTask(self, u'log'))
 
         # All preferences (in order) and initial preference list
         self.AllPreferences = ["build", "scout", "gather", "mine", "replenish"]

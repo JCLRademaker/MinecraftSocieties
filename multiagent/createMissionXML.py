@@ -4,8 +4,8 @@ import random
 
 def MakeDrawingDecorator():
     # Chest is always hardcoded.
-    chest_x = 10
-    chest_z = 11
+    chest_x = 3
+    chest_z = 4
     block_type = "sand"
 
     drawing_decorator = "<DrawingDecorator>"
