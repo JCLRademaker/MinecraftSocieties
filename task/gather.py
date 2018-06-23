@@ -16,19 +16,20 @@ class GatherTask(Task):
         location = (resourceList[0][0] + 0.5, 60, resourceList[0][1] + 0.5)
         task.reachedResource = agent.MoveLookAtBlock(location)
         raydat = agent.data.get(u'LineOfSight',False)
-        print(location)
         
+        # attack if we are looking at a tree
         if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
-            "Tree detected"
+            # equip item
             if u'inventory' in agent.data:
                 inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
                 agent.EquipToolForResource(task.r, inv)
+                
             agent.SendCommand("attack 1")
             agent.SendCommand("yaw 0")
             agent.SendCommand("pitch 0")
-        elif task.reachedResource and raydat[u'type'] == task.r:
+        elif task.reachedResource and raydat[u'type'] == task.r :   # if we reached the tree attack
             agent.SendCommand("attack 1")
-        elif task.reachedResource and not raydat[u'type'] == task.r:
+        elif task.reachedResource and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):   # if the tree is gone stop
             agent.SendCommand("attack 0")
             agent.SendCommand("setPitch 0")
             return True
