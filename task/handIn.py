@@ -1,10 +1,10 @@
 from task import Task
 
-class ReturnTask(Task):
+class HandinTask(Task):
     def __init__(self, agent, resource):
         Task.__init__(self, agent)
         self.r = resource
-        self.reachedHome
+        self.reachedHome = False
 
     def Execute(task, agent):
         if not task.reachedHome:    # Go home

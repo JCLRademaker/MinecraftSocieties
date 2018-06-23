@@ -34,6 +34,7 @@ class MultiAgent:
         # The Malmo host
         self.host = MalmoPython.AgentHost()
         self.world_state = None
+        self.data = []
 
         # Chat
         self.chatter = chat.ChatClient(name)
@@ -50,7 +51,7 @@ class MultiAgent:
         self.big_map = {}
         self.block_list = {}
         self.home = (25, 60, 25)  # TODO: Set dynamically at spawn
-        self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom"]
+        self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom", "red_flower"]
 
         # Task queue
         self.taskList = list()
@@ -443,6 +444,15 @@ class MultiAgent:
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (coordinates[0] // 100, coordinates[2] // 100)
         return self.big_map[map_key][coordinates[2] % 100][coordinates[0] % 100]
+        
+    def InformationCount(self):
+        # Returns the amount of relevant information points in the agents knowledge base
+        count = 0
+        
+        for type in self.block_list:
+            count += len(type)
+            
+        return count
 
     # ==============================================================================
     # ============================ Vision methods ==================================
@@ -470,7 +480,9 @@ class MultiAgent:
     def doCurrentTask(self):
         if len(self.taskList) > 0: 
             task = self.taskList[0]
-            return task.Execute(self)
+            if task.Execute(self):
+                del self.taskList[0] 
+                return True
         return False
 
     """

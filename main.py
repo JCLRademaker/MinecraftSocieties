@@ -1,6 +1,7 @@
 from __future__ import print_function
 from collections import namedtuple
 from multiagent import multiserver, createMissionXML
+from task import build, scout, collect, gather, handIn
 import time
 import tasks
 import MalmoPython
@@ -17,7 +18,9 @@ server.StartServer(agents)
 # ==============================================================================
 # ========================= Implementing the Server ============================
 # ==============================================================================
-# server.agents[1].SendMessage("Hoi", target="Jan")
+server.agents[1].SendMessage("Hoi", target="Jan")
+s = scout.ScoutTask(server.agents[0], 50)
+server.agents[0].addTask(s)
 
 while server.IsRunning():
     success, obser = server.Observe()       # Call all Agent.Observe for init
@@ -25,7 +28,7 @@ while server.IsRunning():
     chats = server.GetChat()                # Call all Agent.GetChat
 
     if success:
-        print(prefScores)
+        server.agents[0].doCurrentTask()
         for i, score in enumerate(prefScores):
             pass
 
