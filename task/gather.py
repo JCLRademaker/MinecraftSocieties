@@ -14,7 +14,7 @@ class GatherTask(Task):
     def Execute(task, agent):
         if not task.reachedResource:    # go to know resource spot
             resourceList = agent.block_list[task.r]
-            location = (resourceList[0][0], 62, resourceList[0][1])
+            location = (resourceList[0][0], 61, resourceList[0][1])
             task.reachedResource = agent.MoveToLocation(location,  distance = 4)
             return False
         elif "worldGrid" in agent.data:  # harvest resource
@@ -34,7 +34,13 @@ class GatherTask(Task):
             
             # If resource found, harvest it otherwise stop attacking
             if target:
-                if agent.MoveToRelBlock(index):
+                raydat = agent.data.get(u'LineOfSight',False)
+                if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
+                    "Tree detected"
+                    agent.SendCommand("attack 1")
+                    agent.SendCommand("yaw 0")
+                    agent.SendCommand("pitch 0")
+                elif agent.MoveToRelBlock(index):
                     agent.SendCommand("attack 1")
                 else:
                     agent.SendCommand("attack 0")   
