@@ -13,7 +13,7 @@ class CollectTask(Task):
             for ent in entities:
                 if ent.name == task.r:
                     target = True # Still entities to gather            
-                    agent.MoveLookAtLocation((ent.x, ent.y, ent.z))                     
+                    agent.MoveToLocation((ent.x, ent.y, ent.z))                     
                     break	
             
             return not target # Return if the task is done (no more target entities)    

@@ -8,7 +8,7 @@ class HandinTask(Task):
 
     def Execute(task, agent):
         if not task.reachedHome:    # Go home
-            task.reachedHome = agent.MoveLookAtBlock(agent.home)
+            task.reachedHome = agent.MoveToLocation(agent.home)
             return False
         else:   # Return items to chest
             # Get the observed grid
