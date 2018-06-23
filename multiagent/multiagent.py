@@ -61,8 +61,8 @@ class MultiAgent:
         # ??????
         self.big_map = {}
         self.block_list = {}
-        self.home = (25, 60, 25)  # TODO: Set dynamically at spawn
-        self.Position = (25, 60, 25, 0, 0)
+        self.home = (0, 61, 0)  # TODO: Set dynamically at spawn
+        self.Position = (0, 61, 0, 0, 0)
         self.scoutingBlacklist = ["air", "tallgrass", "vine", "dirt", "brown_mushroom", "red_mushroom", "red_flower"]
 
         # Task queue - scouting is the initial task for all agents
@@ -513,7 +513,6 @@ class MultiAgent:
         for type in self.block_list:
             count += len(self.block_list[type])
         
-        print(self.block_list)
         return count
 
     # ==============================================================================

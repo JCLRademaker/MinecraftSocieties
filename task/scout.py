@@ -17,11 +17,11 @@ class ScoutTask(Task):
         return abs(coordinatesA[0] - coordinatesB[0]) + abs(coordinatesA[2] - coordinatesB[2])
         
     def Execute(task, agent):
+        print(agent.InformationCount())
         if agent.InformationCount() >= task.goal:
-            print("Done scouting")
+            print("Done Scouting")
             return True
         else:
-            print(agent.block_list)
             if "worldGrid" in agent.data:
                 blocks = agent.data.get(u'worldGrid', 0)
                 agent.UpdateMapEfficient(blocks)
@@ -32,7 +32,7 @@ class ScoutTask(Task):
 
 
             #Select a scouting destination, then move there:
-            radius = 10
+            radius = 100
             min_score = 10**5
             while task.target_reached:
                 old_target = task.target
