@@ -19,7 +19,7 @@ server.StartServer(agents)
 # ========================= Implementing the Server ============================
 # ==============================================================================
 server.agents[1].SendMessage("Hoi", target="Jan")
-s = scout.ScoutTask(server.agents[0], 50)
+s = scout.ScoutTask(server.agents[0], 11)
 server.agents[0].addTask(s)
 
 while server.IsRunning():

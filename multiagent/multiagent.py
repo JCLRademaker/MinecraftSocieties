@@ -450,7 +450,7 @@ class MultiAgent:
         count = 0
         
         for type in self.block_list:
-            count += len(type)
+            count += len(self.block_list[type])
             
         return count
 
