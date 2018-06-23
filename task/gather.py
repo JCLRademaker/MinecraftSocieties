@@ -13,9 +13,10 @@ class GatherTask(Task):
 
     def Execute(task, agent):
         resourceList = agent.block_list[task.r]
-        location = (resourceList[0][0], 60, resourceList[0][1])
+        location = (resourceList[0][0] + 0.5, 60, resourceList[0][1] + 0.5)
         task.reachedResource = agent.MoveLookAtBlock(location)
         raydat = agent.data.get(u'LineOfSight',False)
+        print(location)
         
         if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
             "Tree detected"
