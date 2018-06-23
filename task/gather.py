@@ -12,42 +12,28 @@ class GatherTask(Task):
         self.reachedResource = False
 
     def Execute(task, agent):
-        if not task.reachedResource:    # go to know resource spot
-            resourceList = agent.block_list[task.r]
-            location = (resourceList[0][0], 61, resourceList[0][1])
-            task.reachedResource = agent.MoveToLocation(location,  distance = 4)
-            return False
-        elif "worldGrid" in agent.data:  # harvest resource
-            blocks = agent.data.get(u'worldGrid', 0)
-            index = 0
-            target = False      
-                        
-            # Scout the grid for the given resource
-            for b in blocks:
-                index += 1
-                if b == task.r:   
-                    target = True       
-                    if u'inventory' in agent.data:
-                        inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
-                        agent.EquipToolForResource(task.r, inv)
-                    break								
-            
-            # If resource found, harvest it otherwise stop attacking
-            if target:
-                raydat = agent.data.get(u'LineOfSight',False)
-                if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
-                    "Tree detected"
-                    agent.SendCommand("attack 1")
-                    agent.SendCommand("yaw 0")
-                    agent.SendCommand("pitch 0")
-                elif agent.MoveToRelBlock(index):
-                    agent.SendCommand("attack 1")
-                else:
-                    agent.SendCommand("attack 0")   
-            else:
-                agent.SendCommand("attack 0")
+        resourceList = agent.block_list[task.r]
+        location = (resourceList[0][0], 60, resourceList[0][1])
+        task.reachedResource = agent.MoveLookAtBlock(location)
+        raydat = agent.data.get(u'LineOfSight',False)
+        
+        if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
+            "Tree detected"
+            if u'inventory' in agent.data:
+                inv = [InventoryObject(**k) for k in agent.data[u'inventory']]
+                agent.EquipToolForResource(task.r, inv)
+            agent.SendCommand("attack 1")
+            agent.SendCommand("yaw 0")
+            agent.SendCommand("pitch 0")
+        elif task.reachedResource and raydat[u'type'] == task.r:
+            agent.SendCommand("attack 1")
+        elif task.reachedResource and not raydat[u'type'] == task.r:
+            agent.SendCommand("attack 0")
+            agent.SendCommand("setPitch 0")
+            return True
+        else:
+            agent.SendCommand("attack 0")
 
-            return not target                    
         return False
     
    
