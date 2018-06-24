@@ -23,7 +23,7 @@ class ReplenishTask(Task):
                         agent.SendCommand("hotbar." + str(itemIndex) + " 1")
                         agent.SendCommand("hotbar." + str(itemIndex) + " 0")
                 
-                if int(agent.data[u'Food']) >= 18:
+                if int(agent.data[u'Food']) >= 20:
                     agent.SendCommand("use 0")
                     agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
                     return True

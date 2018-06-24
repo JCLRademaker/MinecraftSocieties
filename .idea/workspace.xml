@@ -3,12 +3,12 @@
   <component name="ChangeListManager">
     <list default="true" id="e861d27d-47a3-4f7a-a030-dc6c109861e0" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MalmoPython.lib" beforeDir="false" afterPath="$PROJECT_DIR$/MalmoPython.lib" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MalmoPython.pyd" beforeDir="false" afterPath="$PROJECT_DIR$/MalmoPython.pyd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map-1.0-1.0.png" beforeDir="false" afterPath="$PROJECT_DIR$/map-1.0-1.0.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map-1.00.0.png" beforeDir="false" afterPath="$PROJECT_DIR$/map-1.00.0.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map0.0-1.0.png" beforeDir="false" afterPath="$PROJECT_DIR$/map0.0-1.0.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/map0.00.0.png" beforeDir="false" afterPath="$PROJECT_DIR$/map0.00.0.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/multiagent/multiagent.py" beforeDir="false" afterPath="$PROJECT_DIR$/multiagent/multiagent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/task/handIn.py" beforeDir="false" afterPath="$PROJECT_DIR$/task/handIn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/task/replenish.py" beforeDir="false" afterPath="$PROJECT_DIR$/task/replenish.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/inventory.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/inventory.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -37,8 +37,8 @@
       <file leaf-file-name="multiagent.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/multiagent/multiagent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="318">
-              <caret line="422" column="49" selection-start-line="422" selection-start-column="49" selection-end-line="422" selection-end-column="49" />
+            <state relative-caret-position="336">
+              <caret line="79" column="33" selection-start-line="79" selection-start-column="33" selection-end-line="79" selection-end-column="33" />
             </state>
           </provider>
         </entry>
@@ -55,8 +55,8 @@
       <file leaf-file-name="replenish.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/task/replenish.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="504">
-              <caret line="27" column="42" selection-start-line="27" selection-start-column="42" selection-end-line="27" selection-end-column="42" />
+            <state relative-caret-position="525">
+              <caret line="25" column="49" selection-start-line="25" selection-start-column="49" selection-end-line="25" selection-end-column="49" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -118,6 +118,7 @@
       <find>agent_hosts</find>
       <find>scout</find>
       <find>print</find>
+      <find>thres</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -560,16 +561,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/task/replenish.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="504">
-          <caret line="27" column="42" selection-start-line="27" selection-start-column="42" selection-end-line="27" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#21#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tools/inventory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="434">
@@ -584,10 +575,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/task/replenish.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="25" column="49" selection-start-line="25" selection-start-column="49" selection-end-line="25" selection-end-column="49" />
+          <folding>
+            <element signature="e#0#21#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/multiagent/multiagent.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="318">
-          <caret line="422" column="49" selection-start-line="422" selection-start-column="49" selection-end-line="422" selection-end-column="49" />
+        <state relative-caret-position="336">
+          <caret line="79" column="33" selection-start-line="79" selection-start-column="33" selection-end-line="79" selection-end-column="33" />
         </state>
       </provider>
     </entry>
