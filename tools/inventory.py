@@ -46,6 +46,7 @@ def RetrieveItemOfType(inventory, item_type, amount_stacks=None):
         for i in range(len(item_slots)):
             # Select the tuple with the max value
             max_slot = max(l_select, key=lambda t: t[1])
+            print(max_slot)
             if (total + max_slot[1]) <= amount_stacks*64:
                 total += max_slot[1]
                 indices.append(int(max_slot[0]))
@@ -71,7 +72,7 @@ def FindSlotsInUse(inventory, inventory_name):
 
 
 # Use Malmo's combine option if it's possible
-def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name):
+def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name, to_o_inv = True):
     # Update item amount chest (other inventory)
     other_inv_amount = max(min(from_slot[1] + to_slot[1], 64), 0)
     o_inv_slots[o_inv_slots.index(to_slot)] = (to_slot[0], other_inv_amount)
@@ -79,18 +80,27 @@ def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name
     item_amount = (0, (from_slot[1] + to_slot[1]) - 64)[from_slot[1] + to_slot[1] > 64]
     item_slots[item_slots.index(from_slot)] = (from_slot[0], item_amount)
 
-    return "combineInventoryItems " + o_inv_name + ":" + str(to_slot[0]) + " inventory:" + str(from_slot[0]), \
-           item_slots, o_inv_slots
+    if to_o_inv:
+        return "combineInventoryItems " + o_inv_name + ":" + str(to_slot[0]) + " inventory:" + str(from_slot[0]), \
+            item_slots, o_inv_slots
+    else:
+        return "combineInventoryItems " + "inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(to_slot[0]), \
+            item_slots, o_inv_slots
+        
 
 
 # Use Malmo's swap option if it's possible
-def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
+def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, to_o_inv = True):
     for x in range(o_inv_size):
         if x not in indices_used:
             indices_used.append(x)
             o_inv_slots.append((x, from_slot[1]))
             # It's swapped/zero, so not applicable anymore
             item_slots[next(item_slots.index(x) for x in item_slots if x[0] == from_slot[0])] = (from_slot[0], 0)
-            return "swapInventoryItems inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(x), \
-                   indices_used, item_slots, o_inv_slots
+            if to_o_inv:
+                return "swapInventoryItems inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(x), \
+                    indices_used, item_slots, o_inv_slots
+            else:
+                return "swapInventoryItems " + o_inv_name + ":" + str(x) + " inventory:" + str(from_slot[0]) + " ", \
+                    indices_used, item_slots, o_inv_slots
     return "", indices_used, item_slots, o_inv_slots

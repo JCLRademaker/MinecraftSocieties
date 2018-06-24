@@ -14,7 +14,7 @@ class HandInTask(Task):
                 # Adds items of a specified type to the chest
                 agent.SendCommand("move 0")
                 agent.SendCommand("setPitch 0")
-                agent.AddItemsToChest(agent.data[u'inventory'], "chest", task.r)
+                agent.AddItemsToInv(agent.data[u'inventory'], "chest", task.r)
                 return True
         return False
             
