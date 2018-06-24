@@ -12,10 +12,9 @@ class ReplenishTask(Task):
         chests = agent.block_list["chest"]
         chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
         
-        if (not task.GotMelons ) and agent.MoveLookAtBlock(chestLocation): # get melons
+        if (not task.GotMelons) and agent.MoveLookAtBlock(chestLocation): # get melons
             if agent.GetAmountOfType(task.Inventory, "melon") == 0:
-                agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1,  False)         
-                task.GotMelons = True
+                task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
         elif task.GotMelons:                                              # eat melons
             if agent.MoveLookAtBlock(agent.home):
                 for item in task.Inventory:
@@ -26,7 +25,7 @@ class ReplenishTask(Task):
                 
                 if int(agent.data[u'Food']) >= 18:
                     agent.SendCommand("use 0")
-                    agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon")
+                    agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
                     return True
                 else:
                     agent.SendCommand("use 1")

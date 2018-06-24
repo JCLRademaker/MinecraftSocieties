@@ -86,7 +86,6 @@ def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name
     else:
         return "combineInventoryItems " + "inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(to_slot[0]), \
             item_slots, o_inv_slots
-        
 
 
 # Use Malmo's swap option if it's possible
