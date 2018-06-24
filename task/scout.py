@@ -20,7 +20,6 @@ class ScoutTask(Task):
         if agent.InformationCount() >= task.goal:
             chests = agent.block_list["chest"]
             chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
-            return True
             if agent.MoveToLocation(chestLocation, distance = 3):
                 agent.SendCommand("move 0")
                 return True

@@ -39,4 +39,4 @@ while server.IsRunning():
                     print(str(msg))
 
     # Give agent time to process
-    time.sleep(0.3)
+    time.sleep(0.1)

@@ -23,5 +23,7 @@ class CollectTask(Task):
             if not target:
                 agent.SendCommand("move 0")# Return if the task is done (no more target entities)    
                 return True
+        else:
+            return True
                 
         return False

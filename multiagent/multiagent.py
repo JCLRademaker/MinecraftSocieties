@@ -233,6 +233,7 @@ class MultiAgent:
             returns: returns a boolean whether or not the agent has arrived
         """
         self.mov.yawd = False
+        self.mov.movd = False
         self.mov.pitd = False
         targetLocationN = (targetLocation[0], targetLocation[1]+0.5, targetLocation[2])
         return self.mov.MoveLookAtLocation(targetLocationN, distance = 3)
