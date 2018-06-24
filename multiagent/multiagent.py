@@ -330,28 +330,35 @@ class MultiAgent:
         # Replenishing always has priority #weWantToLive
         if self.Preference[0] == "replenish":
             self.addTask(replenish.ReplenishTask(self))          
+            self.SendMessage("I'm eating food")
         
         # Add task(s) based on priority
         if self.priority == "mine":
             resourceKBCount = len(self.block_list[u'log'])               
             if resourceKBCount > 0: # We know there is a resource so mine it
+                self.SendMessage("I'm gathering wood")
                 self.addTask(gather.GatherTask(self, u'log'))
                 self.addTask(collect.CollectTask(self, "log"))
                 self.addTask(handIn.HandInTask(self, u'log'))
             else: # We need to scout for the resource
-                self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
+                self.SendMessage("I'm scouting")
+                self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
         elif self.priority == "gather":
             resourceKBCount = len(self.block_list[u'melon_block'])          
             if resourceKBCount > 0: # We know there is a resource so mine it   
                 self.addTask(gather.GatherTask(self, u'melon_block'))
                 self.addTask(collect.CollectTask(self, "melon"))
                 self.addTask(handIn.HandInTask(self, u'melon'))
+                self.SendMessage("I'm gathering food")
             else: # We need to scout for the resource
-                self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
+                self.SendMessage("I'm scouting")
+                self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
         elif self.priority == "build":
+            self.SendMessage("I'm building")
             self.addTask(build.BuildTask(self, (10,61,10)))
         else:
-            self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
+            self.SendMessage("I'm scouting")
+            self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
