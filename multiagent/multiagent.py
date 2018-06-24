@@ -335,7 +335,8 @@ class MultiAgent:
         
         # Add task(s) based on priority
         if self.priority == "mine":
-            resourceKBCount = len(self.block_list[u'log'])               
+            if u'log' in self.block_list:
+                resourceKBCount = len(self.block_list[u'log'])               
             if resourceKBCount > 0: # We know there is a resource so mine it
                 self.SendMessage("I'm gathering wood")
                 self.addTask(gather.GatherTask(self, u'log'))
@@ -344,8 +345,9 @@ class MultiAgent:
             else: # We need to scout for the resource
                 self.SendMessage("I'm scouting")
                 self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
-        elif self.priority == "gather":
-            resourceKBCount = len(self.block_list[u'melon_block'])          
+        elif self.priority == "gather":       
+            if u'melon_block' in self.block_list:
+                resourceKBCount = len(self.block_list[u'melon_block'])          
             if resourceKBCount > 0: # We know there is a resource so mine it   
                 self.addTask(gather.GatherTask(self, u'melon_block'))
                 self.addTask(collect.CollectTask(self, "melon"))
