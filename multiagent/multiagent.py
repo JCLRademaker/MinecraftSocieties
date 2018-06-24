@@ -331,6 +331,7 @@ class MultiAgent:
         if self.Preference[0] == "replenish":
             self.addTask(replenish.ReplenishTask(self))          
             self.SendMessage("I'm eating food")
+            return
         
         # Add task(s) based on priority
         if self.priority == "mine":
@@ -407,7 +408,6 @@ class MultiAgent:
 
             # Items can possibly be combined with slots in chest
             if len(o_inv_slots) > 0 and len(item_slots) > 0:
-                print("Ik ga combinen")
                 item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
 
                 # Try and SWAP slots if there are still items left in the inventory
@@ -419,18 +419,20 @@ class MultiAgent:
                             indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, o_inv)
             #  The chest is empty, add the items to the first (couple of) slot(s)
             elif len(item_slots) > 0:
-                print("Ik ga het in een leeg gat stoppen")
                 indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
                 for slot in item_slots:
                     item_slots, o_inv_slots = self.CombineSwapSlots(
                         indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, o_inv)
         return True
 
-    def AddItemsToInv(self, super_inventory, start_inv_name, item_type, amount_stacks=1):
-        start_inv = inventory.GetInventory(super_inventory, start_inv_name, InventoryObject)
+    def AddItemsToInv(self, super_inventory, chest_inv_name, item_type, amount_stacks=1):
+        chest_inv = inventory.GetInventory(self.data[u'inventory'], chest_inv_name, InventoryObject)
+        print("Chest inv: " + str(chest_inv))
         o_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
+        print("Other inv: " + str(o_inv))
 
-        item_slots = inventory.RetrieveItemOfType(start_inv, item_type, amount_stacks)
+        item_slots = inventory.RetrieveItemOfType(chest_inv, item_type, amount_stacks)
+        print("Item slots: " + str(item_slots))
 
         # Not going through the computational trouble.
         o_inv_size = 41
@@ -443,7 +445,7 @@ class MultiAgent:
             for x in range(o_inv_size):
                 if x not in indices_used:
                     self.SendCommand(
-                        "swapInventoryItems chest" + ":" + str(item_slots[0]) + " inventory:" + str(x))
+                        "swapInventoryItems chest" + ":" + str(item_slots[0][0]) + " inventory:" + str(x))
                     break
         return True
 
@@ -463,8 +465,8 @@ class MultiAgent:
         if len(indices_used) > 0 and len(o_inv_slots) > 0:
             index = len(o_inv_slots) - 1
             other_slot = o_inv_slots[index]
-            if o_inv_slots[index][1] < 64 and o_inv[other_slot[0]].type == from_slot[3]:
-                print("Ik ga type " + str(o_inv[other_slot[0]].type) + " combineren met " + str(from_slot[3]))
+            if o_inv_slots[index][1] < 64 and o_inv[other_slot[0]].type == from_slot[2]:
+                print("Ik ga type " + str(o_inv[other_slot[0]].type) + " combineren met " + str(from_slot[2]))
                 command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
                     from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
                 self.SendCommand(command)

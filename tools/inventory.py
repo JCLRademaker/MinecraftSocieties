@@ -48,7 +48,6 @@ def RetrieveItemOfType(inventory, item_type, amount_stacks=None):
         for i in range(len(item_slots)):
             # Select the tuple with the max value
             max_slot = max(l_select, key=lambda t: t[1])
-            print(max_slot)
             if (total + max_slot[1]) <= amount_stacks*64:
                 total += max_slot[1]
                 indices.append(int(max_slot[0]))
@@ -90,7 +89,6 @@ def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name
 def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
     for x in range(o_inv_size):
         if x not in indices_used:
-            print(x)
             indices_used.append(x)
             o_inv_slots.append((x, from_slot[1]))
             # It's swapped/zero, so not applicable anymore
