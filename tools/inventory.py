@@ -29,6 +29,7 @@ def GetInventorySize(available_inventories, inventory_name):
             inv_size = inv[u'size']
     return inv_size
 
+
 def GetAmountOfType(inventory, item_type):
     quantity = 0
     for item in inventory:
@@ -36,9 +37,10 @@ def GetAmountOfType(inventory, item_type):
             quantity += item.quantity
     return quantity
 
+
 # Retrieve item from inventory with item type (if possible)
 def RetrieveItemOfType(inventory, item_type, amount_stacks=None):
-    item_slots = [(x.index, x.quantity) for x in inventory if x.type == item_type]
+    item_slots = [(x.index, x.quantity, x.type) for x in inventory if x.type == item_type]
 
     # Retrieve ALL if amount_stacks is NOT specified
     if amount_stacks is not None:
@@ -72,7 +74,7 @@ def FindSlotsInUse(inventory, inventory_name):
 
 
 # Use Malmo's combine option if it's possible
-def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name, to_o_inv = True):
+def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name):
     # Update item amount chest (other inventory)
     other_inv_amount = max(min(from_slot[1] + to_slot[1], 64), 0)
     o_inv_slots[o_inv_slots.index(to_slot)] = (to_slot[0], other_inv_amount)
@@ -80,26 +82,19 @@ def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name
     item_amount = (0, (from_slot[1] + to_slot[1]) - 64)[from_slot[1] + to_slot[1] > 64]
     item_slots[item_slots.index(from_slot)] = (from_slot[0], item_amount)
 
-    if to_o_inv:
-        return "combineInventoryItems " + o_inv_name + ":" + str(to_slot[0]) + " inventory:" + str(from_slot[0]), \
-            item_slots, o_inv_slots
-    else:
-        return "combineInventoryItems " + "inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(to_slot[0]), \
-            item_slots, o_inv_slots
+    return "combineInventoryItems " + o_inv_name + ":" + str(to_slot[0]) + " inventory:" + str(from_slot[0]), \
+           item_slots, o_inv_slots
 
 
 # Use Malmo's swap option if it's possible
-def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, to_o_inv = True):
+def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
     for x in range(o_inv_size):
         if x not in indices_used:
+            print(x)
             indices_used.append(x)
             o_inv_slots.append((x, from_slot[1]))
             # It's swapped/zero, so not applicable anymore
             item_slots[next(item_slots.index(x) for x in item_slots if x[0] == from_slot[0])] = (from_slot[0], 0)
-            if to_o_inv:
-                return "swapInventoryItems inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(x), \
-                    indices_used, item_slots, o_inv_slots
-            else:
-                return "swapInventoryItems " + o_inv_name + ":" + str(x) + " inventory:" + str(from_slot[0]) + " ", \
-                    indices_used, item_slots, o_inv_slots
+            return "swapInventoryItems inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(x), \
+                   indices_used, item_slots, o_inv_slots
     return "", indices_used, item_slots, o_inv_slots

@@ -10,11 +10,10 @@ class HandInTask(Task):
         chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
         
         if agent.MoveLookAtBlock(chestLocation):
-            if u'inventoriesAvailable' in agent.data:
-                # Adds items of a specified type to the chest
-                agent.SendCommand("move 0")
-                agent.SendCommand("setPitch 0")
-                agent.AddItemsToChest(agent.data[u'inventory'], "chest", task.r)
-                return True
+            # Adds items of a specified type to the chest
+            agent.SendCommand("move 0")
+            agent.SendCommand("setPitch 0")
+            agent.AddItemsToChest(agent.data[u'inventory'], "chest", task.r)
+            return True
         return False
-            
+
