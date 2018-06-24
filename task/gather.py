@@ -34,6 +34,7 @@ class GatherTask(Task):
             agent.SendCommand("attack 0")
             agent.SendCommand("setPitch 0")
             del agent.block_list[task.r][0]
+            agent.SendCommand("move 1")
             return True
         else:
             agent.SendCommand("attack 0")
