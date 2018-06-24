@@ -277,20 +277,33 @@ class MultiAgent:
     def AdjustPreferences(self):
         self.Preference = []
         inv = self.GetInventory(self.data[u'inventory'], "inventory")
+        chest = ()
+        if spatial.dist(self.home[0] - self.Position[0], self.home[2] - self.Position[2]) < 5:
+            chest = self.GetInventory(self.data[u'inventory'], "chest")
+        
         # Get stats for reasoning
         hunger = int(self.data[u'Food'])
         health = self.data[u'Life']
-
+        melons = self.GetAmountOfType(inv, "melon")
+        logs = self.GetAmountOfType(inv, "log") 
+        cobblestones = self.GetAmountOfType(inv, "cobblestone")
+        
+        # Only add chest items if agent is in range of chest
+        if chest is not ():
+            melons += self.GetAmountOfType(chest, "melon")
+            logs += self.GetAmountOfType(chest, "log")
+            cobblestones += self.GetAmountOfType(chest, "cobblestone")
+        
         # HP/Hunger
         if health < self.hpThreshold or hunger < self.hungerThreshold:
             self.Preference.append("replenish")
 
         # Food gathering
-        if self.GetAmountOfType(inv, "melon") < self.foodThreshold:
+        if melons < self.foodThreshold:
             self.Preference.append("gather")
 
         # Mining
-        if self.GetAmountOfType(inv, "log") + self.GetAmountOfType(inv, "cobblestone") < self.mineThreshold:
+        if logs + cobblestones < self.mineThreshold:
             self.Preference.append("mine")
 
         # Scouting
