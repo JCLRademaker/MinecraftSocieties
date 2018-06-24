@@ -17,7 +17,6 @@ class GatherTask(Task):
         task.reachedResource = agent.MoveLookAtBlock(location)
         raydat = agent.data.get(u'LineOfSight',False)
         
-        print("plz go to " + str(location))
         # attack if we are looking at a tree
         if raydat and raydat[u'type'] == task.r and raydat["inRange"] :
             # equip item
@@ -37,7 +36,6 @@ class GatherTask(Task):
             return True
         else:
             agent.SendCommand("attack 0")
-        print("Ik ben nog NIET klaar")
         return False
     
    

@@ -16,14 +16,12 @@ class CollectTask(Task):
             
             for ent in entities:
                 if ent.name == task.r:
-                    target = True # Still entities to gather            
-                    agent.MoveToLocation((ent.x, ent.y, ent.z))                     
+                    target = True # Still entities to gather     
+                    agent.MoveToLocation((ent.x, ent.y, ent.z), distance = 1)
                     break	
             
             if not target:
                 agent.SendCommand("move 0")# Return if the task is done (no more target entities)    
                 return True
-        else:
-            return True
                 
         return False

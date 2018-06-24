@@ -329,7 +329,6 @@ class MultiAgent:
             self.addTask(collect.CollectTask(self, "log"))
             self.addTask(handIn.HandInTask(self, u'log'))
         elif self.priority == "gather":
-            print("added melon task")
             self.addTask(gather.GatherTask(self, u'melon_block'))
             self.addTask(collect.CollectTask(self, "melon"))
             self.addTask(handIn.HandInTask(self, u'melon'))
