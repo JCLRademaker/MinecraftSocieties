@@ -325,20 +325,29 @@ class MultiAgent:
         
     def SetPreferencesFromVote(self, _priority):   
         self.priority = _priority
+        resourceKBCount = 0        
         
         # Replenishing always has priority #weWantToLive
         if self.Preference[0] == "replenish":
-            self.addTask(replenish.ReplenishTask(self))
+            self.addTask(replenish.ReplenishTask(self))          
         
         # Add task(s) based on priority
         if self.priority == "mine":
-            self.addTask(gather.GatherTask(self, u'log'))
-            self.addTask(collect.CollectTask(self, "log"))
-            self.addTask(handIn.HandInTask(self, u'log'))
+            resourceKBCount = len(self.block_list[u'log'])               
+            if resourceKBCount > 0: # We know there is a resource so mine it
+                self.addTask(gather.GatherTask(self, u'log'))
+                self.addTask(collect.CollectTask(self, "log"))
+                self.addTask(handIn.HandInTask(self, u'log'))
+            else: # We need to scout for the resource
+                self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
         elif self.priority == "gather":
-            self.addTask(gather.GatherTask(self, u'melon_block'))
-            self.addTask(collect.CollectTask(self, "melon"))
-            self.addTask(handIn.HandInTask(self, u'melon'))
+            resourceKBCount = len(self.block_list[u'melon_block'])          
+            if resourceKBCount > 0: # We know there is a resource so mine it   
+                self.addTask(gather.GatherTask(self, u'melon_block'))
+                self.addTask(collect.CollectTask(self, "melon"))
+                self.addTask(handIn.HandInTask(self, u'melon'))
+            else: # We need to scout for the resource
+                self.addTask(scout.ScoutTask(self, self.GetInformation()+10))
         elif self.priority == "build":
             self.addTask(build.BuildTask(self, (10,61,10)))
         else:
