@@ -1,7 +1,7 @@
 from collections import namedtuple
 from tools import angles, spatial, inventory, crafting
 from message import chat
-from task import build, scout, collect, gather, handIn
+from task import build, scout, collect, gather, handIn, replenish
 import tasks
 
 import movement
@@ -77,7 +77,7 @@ class MultiAgent:
 
         # Thresholds for determining preferences (can be changed, just initial numbers here)
         self.hpThreshold = 10
-        self.hungerThreshold = 10
+        self.hungerThreshold = 17
         self.mineThreshold = 2  # Processed materials like planks (so not logs)
         self.foodThreshold = 4
         self.scoutThreshold = 2
@@ -318,6 +318,7 @@ class MultiAgent:
             if pref not in self.Preference:
                 self.Preference.append(pref)
 
+
     def GetPreferences(self):
         preference = (self.name, self.Preference)
         return preference
@@ -327,14 +328,7 @@ class MultiAgent:
         
         # Replenishing always has priority #weWantToLive
         if self.Preference[0] == "replenish":
-            print("I need a replenish task")
-            # 1. Go to chest
-            # 2. Grab slot from chest (can only retrieve in stacks)
-            # 3. Use item of type melon until hunger >18
-            # 4. Put melon pieces back in chest
-            # 5. Done
-           # while self.data[u'Hunger'] < 18:
-           #      self.addTask(replenish.ReplenishTask(self, 10))
+            self.addTask(replenish.ReplenishTask(self))
         
         # Add task(s) based on priority
         if self.priority == "mine":
@@ -378,14 +372,18 @@ class MultiAgent:
 
     def GetAmountOfType(self, _inventory, item_type):
         return inventory.GetAmountOfType(_inventory, item_type)
+       
+    def GetItemFromChest(self, _inventory, item_type, stack_amount = 1):
+        return inventory.RetrieveItemOfType(_inventory, item_type, stack_amount)
 
-    def AddItemsToChest(self, available_inventories, super_inventory, o_inv_name, item_type, amount_stacks=None):
+    def AddItemsToChest(self, super_inventory, o_inv_name, item_type, amount_stacks=None, to_o_inv=True):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
         o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
 
         # Size can only be retrieved through the available inventories entry, which sucks.
-        o_inv_size = inventory.GetInventorySize(available_inventories, o_inv_name)
-
+        # o_inv_size = inventory.GetInventorySize(available_inventories, o_inv_name)
+        o_inv_size = 27
+        
         # Only do this if the inventory is not full
         if not inventory.IsInventoryFull(o_inv, o_inv_size):
             # Retrieve items of type [ ] from BOTH inventories.
@@ -394,7 +392,7 @@ class MultiAgent:
 
             # Items can possibly be combined with slots in chest
             if len(o_inv_slots) > 0 and len(item_slots) > 0:
-                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
+                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name, to_o_inv)
 
                 # Try and SWAP slots if there are still items left in the inventory
                 item_slots = [x for x in item_slots if x[1] > 0]
@@ -402,37 +400,37 @@ class MultiAgent:
                     indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
                     for slot in item_slots:
                         item_slots, o_inv_slots = self.CombineSwapSlots(
-                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
+                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, to_o_inv)
             #  The chest is empty, add the items to the first (couple of) slot(s)
             elif len(item_slots) > 0:
                 indices_used = []
                 for slot in item_slots:
                     item_slots, o_inv_slots = self.CombineSwapSlots(
-                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot)
+                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, to_o_inv)
 
-    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
+    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name, to_o_inv):
         # If there are slots left to COMBINE...
         for slot in item_slots:
             for item in o_inv_slots:
                 if item[1] < 64:
                     # Update and keep track of the slots manually (sadly this has to be done because Malmo)
                     command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                        slot, item, item_slots, o_inv_slots, o_inv_name)
+                        slot, item, item_slots, o_inv_slots, o_inv_name, to_o_inv)
                     self.SendCommand(command)
         return item_slots, o_inv_slots
 
-    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
+    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, to_o_inv):
         # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
         if len(indices_used) > 0:
             index = len(o_inv_slots) - 1
             if o_inv_slots[index][1] < 64:
                 command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
+                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name, to_o_inv)
                 self.SendCommand(command)
         # SWAP items with EMPTY slot(s)
         if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
             command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
-                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
+                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, to_o_inv)
             if command != "":
                 self.SendCommand(command)
         return item_slots, o_inv_slots
