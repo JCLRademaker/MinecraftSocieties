@@ -31,7 +31,7 @@ def returnItems(itemtype, agent):
         agent.SendCommand("use 1")
         if u'inventoriesAvailable' in agent.data:
             # Adds items of a specified type to the chest
-            agent.AddItemsToChest(agent.data[u'inventoriesAvailable'], agent.data[u'inventory'], "enderchest", itemtype)
+            agent.AddItemsToChest(agent.data[u'inventory'], "chest", itemtype)
             agent.SendCommand("use 0")      
             return True
     return False
