@@ -376,7 +376,7 @@ class MultiAgent:
     def GetItemFromChest(self, _inventory, item_type, stack_amount = 1):
         return inventory.RetrieveItemOfType(_inventory, item_type, stack_amount)
 
-    def AddItemsToChest(self, super_inventory, o_inv_name, item_type, amount_stacks=None, to_o_inv=True):
+    def AddItemsToInv(self, super_inventory, o_inv_name, item_type, amount_stacks=None, to_o_inv=True):
         agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
         o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
 
