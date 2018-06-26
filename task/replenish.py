@@ -10,11 +10,17 @@ class ReplenishTask(Task):
     def Execute(task, agent):
         chests = agent.block_list["chest"]
         chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
+
+        for i in range(1000):
+            i += 1
+
         inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")  # eat melons
-        
-        if (not task.GotMelons) and agent.MoveLookAtBlock(chestLocation): # get melons
+
+        if (not task.GotMelons) and agent.MoveLookAtBlock(chestLocation):  # get melons
             if agent.GetAmountOfType(inventory, "melon") == 0:
                 task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
+            else:
+                task.GotMelons = True
         elif task.GotMelons:
             if not task.doneEating and agent.MoveLookAtBlock(agent.home):
                 for item in inventory:
@@ -32,4 +38,5 @@ class ReplenishTask(Task):
 
             if task.doneEating and agent.MoveLookAtBlock(chestLocation):
                 agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
+                agent.SendCommand("setPitch 0")
                 return True

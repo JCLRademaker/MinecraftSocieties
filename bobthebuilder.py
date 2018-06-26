@@ -98,7 +98,7 @@ def GetGrid(x, y, z, size=1):
 
 grid = CGetGrid(0,226, 0)
 grid = [(-2, 226, -1),(-2, 226, 0), (-2, 226, 1),(-2, 227, -1),(-2, 227, 0), (-2, 227, 1)]
-print(grid)
+# print(grid)
 
 
 server.agents[0].SendCommand("hotbar.4 1")

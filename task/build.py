@@ -56,8 +56,8 @@ class BuildTask(Task):
 
         if task.inrange:
             for i, l in enumerate(task.grid):
-                if i > 7:
-                    print (task.working)
+               # if i > 7:
+                   # print (task.working)
                 if not task.working[i]:
                     continue
                 elif agent.PlaceBlock(l):

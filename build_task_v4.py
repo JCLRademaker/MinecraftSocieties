@@ -33,6 +33,49 @@ SIZE_Z = 3
 # pallettes for the structure etc
 pallette = ["log", "air", "mycelium","glowstone","netherrack","slime"]
 
+def MakeDrawingDecorator():
+    # Chest is always hardcoded.
+    chest_x = 3
+    chest_z = 4
+    block_type = "sand"
+
+    drawing_decorator = "<DrawingDecorator>"
+    # Place sand to avoid cluttering of spawning area with e.g. trees/grass.
+    drawing_decorator += '<DrawCuboid x1="' + str(-20) + '" y1="' + str(59) + '" z1="' + str(-10) + \
+                         '" x2="' + str(20) + '" y2="' + str(59) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
+                         '"' + '/>'
+    # Gonna gather watermelones
+    block_type = "melon_block"
+    for x in range(-100, 100):
+        for z in range(-100, 100):
+            if random.uniform(0, 1) <= 0.001:
+                drawing_decorator += '<DrawBlock x="' + str(x) + '" y="' + str(60) + '" z="' + str(z) + '"' + \
+                                     ' type="' + block_type + '"' + '/>'
+    # Clear the spawning area.
+    block_type = "air"
+    drawing_decorator += '<DrawCuboid x1="' + str(-20) + '" y1="' + str(60) + '" z1="' + str(-10) + \
+                         '" x2="' + str(20) + '" y2="' + str(70) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
+                         '"' + '/>'
+    # Mountain.
+    block_type = "stone"
+    drawing_decorator += '<DrawSphere x="' + str(-50) + '" y="' + str(60) + '" z="' + str(50) + \
+                         '" radius="' + str(20) + '"' + ' type="' + block_type + '"' + '/>'
+    # Chest.
+    block_type = "chest"
+    drawing_decorator += '<DrawBlock x="' + str(chest_x) + '" y="' + str(60) + '" z="' + str(chest_z) + '"' + \
+                         ' type="' + block_type + '"' + '/>'
+    # ... And done!
+    drawing_decorator += "</DrawingDecorator>"
+
+    return drawing_decorator
+
+
+def ReturnMobTypes():
+    # All passive mobs
+    mobs = (''' Bat ''' + ''' Chicken ''' + ''' Cow ''' + ''' Donkey ''' + ''' Horse ''' + ''' Mule '''
+            + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''' + ''' Llama ''' + ''' Wolf ''')
+    return mobs
+
 def getMissionXML():
     # Draw a structure directly in front of the player.
     xpos = 0
@@ -41,17 +84,25 @@ def getMissionXML():
     yorg = 1
     zorg = zpos + 1
     startpos = ()
-    return '''<?xml version="1.0" encoding="UTF-8" ?>
-    <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <About>
-        <Summary>Test build battles</Summary>
-    </About>
-    <ServerSection>
-        <ServerHandlers>
-       <FlatWorldGenerator generatorString="3;168:1;8;" forceReset="true"/>
-            <ServerQuitWhenAnyAgentFinishes />
-            <ServerQuitFromTimeUp timeLimitMs="25000" description="Ran out of time."/>
-        </ServerHandlers>
+    return '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+       <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <About>
+           <Summary/>
+         </About>
+         <ServerSection>
+               <ServerInitialConditions>
+                   <Time>
+                       <StartTime>6000</StartTime>
+                       <AllowPassageOfTime>false</AllowPassageOfTime>
+                   </Time>
+                   <Weather>clear</Weather>
+                   <AllowSpawning>true</AllowSpawning>
+                   <AllowedMobs>''' + ReturnMobTypes() + '''</AllowedMobs>
+               </ServerInitialConditions>
+               <ServerHandlers>
+                   <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + "\"true\"" + '''/>''' + MakeDrawingDecorator() + '''
+                   <ServerQuitWhenAnyAgentFinishes/>
+               </ServerHandlers>
     </ServerSection>
     <AgentSection mode="Survival">
         <Name>Han van Meegeren</Name>
@@ -60,7 +111,7 @@ def getMissionXML():
           <InventoryItem slot="1" type="iron_axe"/>
           <InventoryItem slot="2" type="iron_pickaxe"/>
           <InventoryItem slot="0" type="log" quantity="64"/>
-      </Inventory>
+        </Inventory>
             <Placement x="''' + str(xpos + 0.5) + '''" y="1.0" z="''' + str(zpos + 0.5) + '''"/>
         </AgentStart>
         <AgentHandlers>
