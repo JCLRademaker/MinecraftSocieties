@@ -111,8 +111,8 @@ def getMissionXML():
           <InventoryItem slot="1" type="iron_axe"/>
           <InventoryItem slot="2" type="iron_pickaxe"/>
           <InventoryItem slot="0" type="log" quantity="64"/>
-        </Inventory>
-            <Placement x="''' + str(xpos + 0.5) + '''" y="1.0" z="''' + str(zpos + 0.5) + '''"/>
+      </Inventory>
+            <Placement x="''' + str(xpos + 0.5) + '''" y="61" z="''' + str(zpos + 0.5) + '''"/>
         </AgentStart>
         <AgentHandlers>
             <ContinuousMovementCommands />
@@ -436,3 +436,4 @@ for i in range(num_iterations):
 
     
     print()
+
