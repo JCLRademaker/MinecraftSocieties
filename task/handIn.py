@@ -11,7 +11,6 @@ class HandInTask(Task):
         if u'inventoriesAvailable' in agent.data:
             if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \
                     agent.MoveLookAtBlock(agent.chest_location):
-
                 for inv in agent.data[u'inventoriesAvailable']:
                     if inv[u'name'] == "chest":
                         agent.SendCommand("setPitch 0")

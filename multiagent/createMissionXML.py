@@ -67,6 +67,6 @@ def ReturnMissionXML(forceReset):
                 <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + MakeDrawingDecorator() + '''
                 <ServerQuitWhenAnyAgentFinishes/>
             </ServerHandlers>
-        </ServerSection>''' + createAgentXML.CreateAgentXML("Jan") + createAgentXML.CreateAgentXML("Henk") + '''
+        </ServerSection>''' + createAgentXML.CreateAgentXML("Jan", '''<Placement x="0" y="61" z="0" pitch="0" yaw="0"/>''') + createAgentXML.CreateAgentXML("Henk", '''<Placement x="2" y="61" z="0" pitch="0" yaw="0"/>''') + '''
     </Mission>'''
     return xml
