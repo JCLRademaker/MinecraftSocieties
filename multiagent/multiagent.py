@@ -434,7 +434,6 @@ class MultiAgent:
                     for item in item_slots:
                         for y in range(o_inv_size):
                             if y not in indices_used:
-                                print("Going to swap item " + str(item) + " with index " + str(y))
                                 indices_used.append(y)
                                 self.SendCommand(
                                     "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(y))
