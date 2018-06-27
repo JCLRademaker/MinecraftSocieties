@@ -548,7 +548,7 @@ class MultiAgent:
         maps = {}
         for (i,j) in corners:
             block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
-            map_key = (block_position[0] // 100, block_position[1] // 100)
+            map_key = (int(block_position[0] // 100), int(block_position[1] // 100))
             try:
                 map = Image.open("map{}{}.png".format(map_key[0],map_key[1]))
             except IOError:
@@ -564,7 +564,7 @@ class MultiAgent:
 
         # Save the used maps back to where they came from
         for map_key in maps:
-            maps[map_key][1].save("map{}{}.png".format(map_key[0],map_key[1]))
+            maps[map_key][1].save("map{}{}.png".format(int(map_key[0]),int(map_key[1])))
 
 
     def UpdateMapEfficient(self, worldmap):
@@ -578,7 +578,7 @@ class MultiAgent:
         maps = {}
         for (i, j) in corners:
             block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
-            map_key = (block_position[0] // 100, block_position[1] // 100)
+            map_key = (int(block_position[0] // 100), int(block_position[1] // 100))
             try:
                 map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
             except IOError:
@@ -598,11 +598,11 @@ class MultiAgent:
 
         # Save the used maps back to where they came from
         for map_key in maps:
-            maps[map_key][1].save("map{}{}.png".format(map_key[0], map_key[1]))
+            maps[map_key][1].save("map{}{}.png".format(int(map_key[0]), int(map_key[1])))
 
 
     def UpdateMapBlock(self, block_value, block_position, maps):
-        map_key = (block_position[0] // 100, block_position[1] // 100)
+        map_key = (int(block_position[0] // 100), int(block_position[1] // 100))
         #if maps[map_key][0][block_position[1] % 100, block_position[0] % 100] == (0, 0, 0):
         try:
             maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = colourMapping[block_value]
@@ -618,7 +618,7 @@ class MultiAgent:
     def CheckMap(self, coordinates):
         # Input: (x,y,z) coordinate tuple, of which the Y is not used.
         # Returns the type of block at that location, or False if the location has not yet been scouted.
-        map_key = (coordinates[0] // 100, coordinates[2] // 100)
+        map_key = (int(coordinates[0] // 100), int(coordinates[2] // 100))
         try:
             map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
         except IOError:
