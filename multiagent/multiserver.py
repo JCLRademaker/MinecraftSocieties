@@ -67,10 +67,10 @@ class MultiServer:
 
         def Timeout():
             agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 1 20')
-            self.timer = Timer(30, Timeout)
+            self.timer = Timer(20, Timeout)
             self.timer.start()
 
-        self.timer = Timer(30, Timeout)
+        self.timer = Timer(20, Timeout)
         self.timer.start()
 
         print()
