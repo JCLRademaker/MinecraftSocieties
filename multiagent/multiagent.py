@@ -39,6 +39,9 @@ colourMapping = {"air": (128, 128, 128), "tallgrass": (128, 128, 127), "dirt": (
 
 class MultiAgent:
     def __init__(self, name, xml, role):
+        self.chest_location = (3 + 0.5, 60, 4 + 0.5)
+        self.chest = ()
+        self.inventory = ()
         self.name = name
         self.expId = ''
 
@@ -76,15 +79,17 @@ class MultiAgent:
         self.priority = ""
 
         # Thresholds for determining preferences (can be changed, just initial numbers here)
-        self.hpThreshold = 10
-        self.hungerThreshold = 19
-        self.mineThreshold = 2  # Processed materials like planks (so not logs)
-        self.foodThreshold = 4
+        self.hpThreshold = 15
+        self.hungerThreshold = 15
+        self.mineThreshold = 14  # Processed materials like planks (so not logs)
+        self.foodThreshold = 8
         self.scoutThreshold = 2
+
+        self.melons_in_chest = 0
+        self.wood_in_chest = 0
 
     def StartMission(self, clientPool):
         """ """
-
         used_attempts = 0
         max_attempts = 5
         print("Calling startMission for role", self.role)
@@ -275,27 +280,23 @@ class MultiAgent:
 # ==============================================================================
 
     def AdjustPreferences(self):
+        raydat = self.data.get(u'LineOfSight', False)
         self.Preference = []
-        inv = self.GetInventory(self.data[u'inventory'], "inventory")
-        chest = ()
-        if spatial.dist(self.home[0] - self.Position[0], self.home[2] - self.Position[2]) < 5:
-            chest = self.GetInventory(self.data[u'inventory'], "chest")
+        inv = self.GetInventory("inventory")
+
+        # Only get chest information if you are looking at it
+        if raydat and raydat[u'type'] == "chest" and raydat["inRange"]:
+            self.chest = self.GetInventory("chest")
         
         # Get stats for reasoning
         hunger = int(self.data[u'Food'])
-        health = self.data[u'Life']
-        melons = self.GetAmountOfType(inv, "melon")
-        logs = self.GetAmountOfType(inv, "log") 
+        # health = self.data[u'Life']
         cobblestones = self.GetAmountOfType(inv, "cobblestone")
-        
-        # Only add chest items if agent is in range of chest
-        if chest is not ():
-            melons += self.GetAmountOfType(chest, "melon")
-            logs += self.GetAmountOfType(chest, "log")
-            cobblestones += self.GetAmountOfType(chest, "cobblestone")
+        melons = self.melons_in_chest + self.GetAmountOfType(inv, "melon")
+        logs = self.wood_in_chest + self.GetAmountOfType(inv, "log")
         
         # HP/Hunger
-        if health < self.hpThreshold or hunger < self.hungerThreshold:
+        if hunger < self.hungerThreshold:
             self.Preference.append("replenish")
 
         # Food gathering
@@ -318,12 +319,11 @@ class MultiAgent:
             if pref not in self.Preference:
                 self.Preference.append(pref)
 
-
     def GetPreferences(self):
         preference = (self.name, self.Preference)
         return preference
         
-    def SetPreferencesFromVote(self, _priority):   
+    def SetPreferencesFromVote(self, _priority):
         self.priority = _priority
         resourceKBCount = 0        
         
@@ -332,36 +332,41 @@ class MultiAgent:
             self.addTask(replenish.ReplenishTask(self))          
             self.SendMessage("I'm eating food")
             return
-        
-        # Add task(s) based on priority
+
+        # Add task(s) based on group priority
         if self.priority == "mine":
             if u'log' in self.block_list:
-                resourceKBCount = len(self.block_list[u'log'])               
-            if resourceKBCount > 0: # We know there is a resource so mine it
+                resourceKBCount = len(self.block_list[u'log'])
+            if resourceKBCount > 0:  # We know there is a resource so mine it
                 self.SendMessage("I'm gathering wood")
                 self.addTask(gather.GatherTask(self, u'log'))
                 self.addTask(collect.CollectTask(self, "log"))
                 self.addTask(handIn.HandInTask(self, u'log'))
-            else: # We need to scout for the resource
+            else:   # We need to scout for the resource
                 self.SendMessage("I'm scouting")
                 self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
-        elif self.priority == "gather":       
+        elif self.priority == "gather":
             if u'melon_block' in self.block_list:
-                resourceKBCount = len(self.block_list[u'melon_block'])          
-            if resourceKBCount > 0: # We know there is a resource so mine it   
+                resourceKBCount = len(self.block_list[u'melon_block'])
+            if resourceKBCount > 0:     # We know there is a resource so mine it
                 self.addTask(gather.GatherTask(self, u'melon_block'))
                 self.addTask(collect.CollectTask(self, "melon"))
-                self.addTask(handIn.HandInTask(self, u'melon'))
+                self.addTask(handIn.HandInTask(self, "melon"))
                 self.SendMessage("I'm gathering food")
             else: # We need to scout for the resource
                 self.SendMessage("I'm scouting")
                 self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
         elif self.priority == "build":
             self.SendMessage("I'm building")
-            self.addTask(build.BuildTask(self, (10,61,10)))
+            self.addTask(build.BuildTask(self, (10, 61, 10)))
         else:
             self.SendMessage("I'm scouting")
             self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
+
+        for i in range(1000):
+            i += 1
+
+        self.SendCommand("setPitch 0")
 
 # ==============================================================================
 # ============================= Resource Gathering =============================
@@ -386,99 +391,127 @@ class MultiAgent:
     # ==============================================================================
     # ================================= Inventory ==================================
     # ==============================================================================
-    def GetInventory(self, super_inventory, inventory_name):
-        return inventory.GetInventory(super_inventory, inventory_name, InventoryObject)
+    def GetInventory(self, inventory_name):
+        return inventory.GetInventory(self.data[u'inventory'], inventory_name, InventoryObject)
 
     def GetAmountOfType(self, _inventory, item_type):
         return inventory.GetAmountOfType(_inventory, item_type)
        
-    def GetItemFromChest(self, _inventory, item_type, stack_amount = 1):
+    def GetItemFromChest(self, _inventory, item_type, stack_amount=1):
         return inventory.RetrieveItemOfType(_inventory, item_type, stack_amount)
 
     def AddItemsToChest(self, super_inventory, o_inv_name, item_type, amount_stacks=None):
-        agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-        o_inv = inventory.GetInventory(super_inventory, o_inv_name, InventoryObject)
+        raydat = self.data[u'LineOfSight']
 
-        # Size can only be retrieved through the available inventories entry, which sucks.
-        o_inv_size = 27
+        if u'inventoriesAvailable' in self.data:
+            if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \
+                    self.MoveLookAtBlock(self.chest_location):
+                # Give a little time-out
+                for i in range(1000):
+                    i += 1
 
-        # Only do this if the inventory is not full
-        if not inventory.IsInventoryFull(o_inv, o_inv_size):
-            # Retrieve items of type [ ] from BOTH inventories.
-            item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
-            o_inv_slots = inventory.RetrieveItemOfType(o_inv, item_type)
+                agent_inv = inventory.GetInventory(self.data[u'inventory'], "inventory", InventoryObject)
+                o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
 
-            # Items can possibly be combined with slots in chest
-            if len(o_inv_slots) > 0 and len(item_slots) > 0:
-                item_slots, o_inv_slots = self.CombineSlots(item_slots, o_inv_slots, o_inv_name)
+                # Get the item slots of which items have to be moved to the chest
+                item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
 
-                # Try and SWAP slots if there are still items left in the inventory
-                item_slots = [x for x in item_slots if x[1] > 0]
-                if len(item_slots) > 0:
+                # Not going through the computational trouble (armor slots excluded)
+                o_inv_size = 36
+
+                # Only do this if the inventory is not full
+                if not inventory.IsInventoryFull(o_inv, o_inv_size) and len(item_slots) > 0:
+                    # First try to combine everything
+                    for item in item_slots:
+                        for x in range(o_inv_size):
+                            # print("Going to combine with index: " + str(x))
+                            self.SendCommand(
+                                "combineInventoryItems chest" + ":" + str(x) + " inventory:" + str(item[0]))
+
+                    # o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
+                    for i in range(5000):
+                        i += 1
+
+                    o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
                     indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
-                    for slot in item_slots:
-                        item_slots, o_inv_slots = self.CombineSwapSlots(
-                            indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, o_inv)
-            #  The chest is empty, add the items to the first (couple of) slot(s)
-            elif len(item_slots) > 0:
-                indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
-                for slot in item_slots:
-                    item_slots, o_inv_slots = self.CombineSwapSlots(
-                        indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, slot, o_inv)
-        return True
+
+                    # Then try to swap
+                    for item in item_slots:
+                        for y in range(o_inv_size):
+                            if y not in indices_used:
+                                indices_used.append(y)
+                                self.SendCommand(
+                                    "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(y))
+                                break
+                else:   # The chest is empty
+                    i = 0
+                    for item in item_slots:
+                        self.SendCommand(
+                            "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(i))
+                        i += 1
+
+                return True
+        return False
 
     def AddItemsToInv(self, super_inventory, chest_inv_name, item_type, amount_stacks=1):
-        chest_inv = inventory.GetInventory(self.data[u'inventory'], chest_inv_name, InventoryObject)
-        print("Chest inv: " + str(chest_inv))
-        o_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-        print("Other inv: " + str(o_inv))
+        for i in range(1000):
+            i += 1
 
-        item_slots = inventory.RetrieveItemOfType(chest_inv, item_type, amount_stacks)
-        print("Item slots: " + str(item_slots))
+        raydat = self.data[u'LineOfSight']
 
-        # Not going through the computational trouble.
-        o_inv_size = 41
+        if u'inventoriesAvailable' in self.data:
+            if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \
+                    self.MoveLookAtBlock(self.chest_location):
+                chest_inv = inventory.GetInventory(super_inventory, chest_inv_name, InventoryObject)
+                o_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
 
-        # Only do this if the inventory is not full
-        if not inventory.IsInventoryFull(o_inv, o_inv_size) and len(item_slots) > 0:
-            indices_used = inventory.FindSlotsInUse(o_inv, "inventory")
+                item_slots = inventory.RetrieveItemOfType(chest_inv, item_type, amount_stacks)
 
-            # If there are no items of type in inventory
-            for x in range(o_inv_size):
-                if x not in indices_used:
-                    self.SendCommand(
-                        "swapInventoryItems chest" + ":" + str(item_slots[0][0]) + " inventory:" + str(x))
-                    break
-        return True
+                # Not going through the computational trouble.
+                o_inv_size = 27
 
-    def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
-        # If there are slots left to COMBINE...
-        for slot in item_slots:
-            for item in o_inv_slots:
-                if item[1] < 64:
-                    # Update and keep track of the slots manually (sadly this has to be done because Malmo)
-                    command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                        slot, item, item_slots, o_inv_slots, o_inv_name)
-                    self.SendCommand(command)
-        return item_slots, o_inv_slots
+                # Only do this if the inventory is not full
+                if not inventory.IsInventoryFull(o_inv, o_inv_size) and len(item_slots) > 0:
+                    indices_used = inventory.FindSlotsInUse(o_inv, "inventory")
 
-    def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, o_inv):
-        # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
-        if len(indices_used) > 0 and len(o_inv_slots) > 0:
-            index = len(o_inv_slots) - 1
-            other_slot = o_inv_slots[index]
-            if o_inv_slots[index][1] < 64 and o_inv[other_slot[0]].type == from_slot[2]:
-                print("Ik ga type " + str(o_inv[other_slot[0]].type) + " combineren met " + str(from_slot[2]))
-                command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-                    from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
-                self.SendCommand(command)
-        # SWAP items with EMPTY slot(s)
-        if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
-            command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
-                indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
-            if command != "":
-                self.SendCommand(command)
-        return item_slots, o_inv_slots
+                    # If there are no items of type in inventory
+                    for x in range(o_inv_size):
+                        if x not in indices_used:
+                            self.SendCommand(
+                                "swapInventoryItems chest" + ":" + str(item_slots[0][0]) + " inventory:" + str(x))
+                            break
+                return True
+        return False
+
+    # CURRENTLY NOT IN USE -- MALMO??
+    # def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
+    #     # If there are slots left to COMBINE...
+    #     for slot in item_slots:
+    #         for item in o_inv_slots:
+    #             if item[1] < 64:
+    #                 # Update and keep track of the slots manually (sadly this has to be done because Malmo)
+    #                 command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+    #                     slot, item, item_slots, o_inv_slots, o_inv_name)
+    #                 self.SendCommand(command)
+    #     return item_slots, o_inv_slots
+    #
+    # def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, o_inv):
+    #     # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
+    #     if len(o_inv_slots) > 0:
+    #         index = len(o_inv_slots) - 1
+    #         other_slot = o_inv_slots[index]
+    #         if o_inv_slots[index][1] < 64 and o_inv[other_slot[0]].type == from_slot[2]:
+    #             print("Ik ga type " + str(o_inv[other_slot[0]].type) + " combineren met " + str(from_slot[2]))
+    #             command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
+    #                 from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
+    #             self.SendCommand(command)
+    #     # SWAP items with EMPTY slot(s)
+    #     if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
+    #         command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
+    #             indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
+    #         if command != "":
+    #             self.SendCommand(command)
+    #     return item_slots, o_inv_slots
 
     # ==============================================================================
     # ================================ Crafting ====================================
@@ -634,8 +667,7 @@ class MultiAgent:
         if len(self.taskList) > 0:  # We have a task to do
             task = self.taskList[0]
             if task.Execute(self):
-                del self.taskList[0] 
-                print("task deleted")
+                del self.taskList[0]
             return True
         # We have to find something new to do
         return False

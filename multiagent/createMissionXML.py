@@ -26,7 +26,7 @@ def MakeDrawingDecorator():
                          '" x2="' + str(20) + '" y2="' + str(70) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
                          '"' + '/>'
     # Mountain.
-    block_type = "stone"
+    block_type = "cobblestone"
     drawing_decorator += '<DrawSphere x="' + str(-50) + '" y="' + str(60) + '" z="' + str(50) + \
                          '" radius="' + str(20) + '"' + ' type="' + block_type + '"' + '/>'
     # Chest.
@@ -67,6 +67,6 @@ def ReturnMissionXML(forceReset):
                 <FlatWorldGenerator generatorString="3;57*1,2*3,2;6;biome_1,decoration" forceReset=''' + forceReset + '''/>''' + MakeDrawingDecorator() + '''
                 <ServerQuitWhenAnyAgentFinishes/>
             </ServerHandlers>
-        </ServerSection>''' + createAgentXML.CreateAgentXML("Jan") + createAgentXML.CreateAgentXML("Henk") + '''
+        </ServerSection>''' + createAgentXML.CreateAgentXML("Jan", '''<Placement x="0" y="61" z="0" pitch="0" yaw="0"/>''') + createAgentXML.CreateAgentXML("Henk", '''<Placement x="2" y="61" z="0" pitch="0" yaw="0"/>''') + '''
     </Mission>'''
     return xml

@@ -1,4 +1,5 @@
 from task import Task
+import gather, collect, handIn, scout
 from collections import namedtuple
 
 class ReplenishTask(Task):
@@ -8,13 +9,37 @@ class ReplenishTask(Task):
         self.doneEating = False
 
     def Execute(task, agent):
-        chests = agent.block_list["chest"]
-        chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
-        inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")  # eat melons
-        
-        if (not task.GotMelons) and agent.MoveLookAtBlock(chestLocation): # get melons
+        raydat = agent.data.get(u'LineOfSight', False)
+        for i in range(1000):
+            i += 1
+
+        inventory = agent.GetInventory("inventory")  # eat melons
+
+        if (not task.GotMelons) and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
+            agent.MoveLookAtBlock(agent.chest_location)):  # get melons
             if agent.GetAmountOfType(inventory, "melon") == 0:
-                task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
+                agent.SendCommand("pitch 0")
+                for inv in agent.data[u'inventoriesAvailable']:
+                    if inv[u'name'] == "chest":
+                        chest = agent.GetInventory("chest")
+                        if agent.GetAmountOfType(chest, "melon") > 0:
+                            task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
+                        else:   # Gather resources
+                            resourceKBCount = 0
+                            if u'melon_block' in agent.block_list:
+                                resourceKBCount = len(agent.block_list[u'melon_block'])
+                            if resourceKBCount > 0:  # We know there is a resource so mine it
+                                agent.addTask(gather.GatherTask(agent, u'melon_block'))
+                                agent.addTask(collect.CollectTask(agent, "melon"))
+                                agent.addTask(handIn.HandInTask(agent, "melon"))
+                                agent.SendMessage("No melons in the inventory! Going to gather melons.")
+                            else:  # We need to scout for the resource
+                                agent.SendMessage("No melons in my observation data! I am going to scout.")
+                                agent.addTask(scout.ScoutTask(agent, agent.InformationCount() + 10))
+                            agent.SendCommand("setPitch 0")
+                            return True
+            else:   # There is already something in the inventory
+                task.GotMelons = True
         elif task.GotMelons:
             if not task.doneEating and agent.MoveLookAtBlock(agent.home):
                 for item in inventory:
@@ -24,12 +49,16 @@ class ReplenishTask(Task):
                         agent.SendCommand("hotbar." + str(itemIndex) + " 0")
                 
                 if int(agent.data[u'Food']) >= 20:
-                    print("Ik ben klaar met eten hoe kan dit nou")
                     agent.SendCommand("use 0")
                     task.doneEating = True
                 else:
+                    if agent.GetAmountOfType(inventory, "melon") == 0:
+                        return True
                     agent.SendCommand("use 1")
 
-            if task.doneEating and agent.MoveLookAtBlock(chestLocation):
+            if task.doneEating and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
+                                    agent.MoveLookAtBlock(agent.chest_location)):
+                agent.SendCommand("pitch 0")
                 agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
+                agent.SendCommand("setPitch 0")
                 return True
