@@ -40,6 +40,8 @@ colourMapping = {"air": (128, 128, 128), "tallgrass": (128, 128, 127), "dirt": (
 class MultiAgent:
     def __init__(self, name, xml, role):
         self.chest_location = (3 + 0.5, 60, 4 + 0.5)
+        self.chest = ()
+        self.inventory = ()
         self.name = name
         self.expId = ''
 
@@ -280,22 +282,21 @@ class MultiAgent:
     def AdjustPreferences(self):
         raydat = self.data.get(u'LineOfSight', False)
         self.Preference = []
-        inv = self.GetInventory(self.data[u'inventory'], "inventory")
+        inv = self.GetInventory("inventory")
 
         # Only get chest information if you are looking at it
-        chest = ()
         if raydat and raydat[u'type'] == "chest" and raydat["inRange"]:
-            chest = self.GetInventory(self.data[u'inventory'], "chest")
+            self.chest = self.GetInventory("chest")
         
         # Get stats for reasoning
         hunger = int(self.data[u'Food'])
-        health = self.data[u'Life']
+        # health = self.data[u'Life']
         cobblestones = self.GetAmountOfType(inv, "cobblestone")
         melons = self.melons_in_chest + self.GetAmountOfType(inv, "melon")
         logs = self.wood_in_chest + self.GetAmountOfType(inv, "log")
         
         # HP/Hunger
-        if health < self.hpThreshold or hunger < self.hungerThreshold:
+        if hunger < self.hungerThreshold:
             self.Preference.append("replenish")
 
         # Food gathering
@@ -350,7 +351,7 @@ class MultiAgent:
             if resourceKBCount > 0:     # We know there is a resource so mine it
                 self.addTask(gather.GatherTask(self, u'melon_block'))
                 self.addTask(collect.CollectTask(self, "melon"))
-                self.addTask(handIn.HandInTask(self, u'melon'))
+                self.addTask(handIn.HandInTask(self, "melon"))
                 self.SendMessage("I'm gathering food")
             else: # We need to scout for the resource
                 self.SendMessage("I'm scouting")
@@ -385,8 +386,8 @@ class MultiAgent:
     # ==============================================================================
     # ================================= Inventory ==================================
     # ==============================================================================
-    def GetInventory(self, super_inventory, inventory_name):
-        return inventory.GetInventory(super_inventory, inventory_name, InventoryObject)
+    def GetInventory(self, inventory_name):
+        return inventory.GetInventory(self.data[u'inventory'], inventory_name, InventoryObject)
 
     def GetAmountOfType(self, _inventory, item_type):
         return inventory.GetAmountOfType(_inventory, item_type)
@@ -395,36 +396,56 @@ class MultiAgent:
         return inventory.RetrieveItemOfType(_inventory, item_type, stack_amount)
 
     def AddItemsToChest(self, super_inventory, o_inv_name, item_type, amount_stacks=None):
-        for i in range(1000):
-            i += 1
-
-        raydat = self.data.get(u'LineOfSight', False)
+        raydat = self.data[u'LineOfSight']
 
         if u'inventoriesAvailable' in self.data:
             if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \
                     self.MoveLookAtBlock(self.chest_location):
-                agent_inv = inventory.GetInventory(super_inventory, "inventory", InventoryObject)
-                o_inv = inventory.GetInventory(super_inventory, "chest", InventoryObject)
+                # Give a little time-out
+                for i in range(1000):
+                    i += 1
+
+                agent_inv = inventory.GetInventory(self.data[u'inventory'], "inventory", InventoryObject)
+                o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
 
                 # Get the item slots of which items have to be moved to the chest
                 item_slots = inventory.RetrieveItemOfType(agent_inv, item_type, amount_stacks)
 
-                # Not going through the computational trouble.
-                o_inv_size = 41
+                # Not going through the computational trouble (armor slots excluded)
+                o_inv_size = 36
 
                 # Only do this if the inventory is not full
                 if not inventory.IsInventoryFull(o_inv, o_inv_size) and len(item_slots) > 0:
-                    indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
-
+                    # First try to combine everything
                     for item in item_slots:
                         for x in range(o_inv_size):
-                            if x not in indices_used:
-                                indices_used.append(x)
-                                self.SendCommand(
-                                    "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(x))
-
+                            # print("Going to combine with index: " + str(x))
                             self.SendCommand(
                                 "combineInventoryItems chest" + ":" + str(x) + " inventory:" + str(item[0]))
+
+                    # o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
+                    for i in range(5000):
+                        i += 1
+
+                    o_inv = inventory.GetInventory(self.data[u'inventory'], "chest", InventoryObject)
+                    indices_used = inventory.FindSlotsInUse(o_inv, o_inv_name)
+
+                    # Then try to swap
+                    for item in item_slots:
+                        for y in range(o_inv_size):
+                            if y not in indices_used:
+                                print("Going to swap item " + str(item) + " with index " + str(y))
+                                indices_used.append(y)
+                                self.SendCommand(
+                                    "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(y))
+                                break
+                else:   # The chest is empty
+                    i = 0
+                    for item in item_slots:
+                        self.SendCommand(
+                            "swapInventoryItems inventory" + ":" + str(item[0]) + " chest:" + str(i))
+                        i += 1
+
                 return True
         return False
 
@@ -432,7 +453,7 @@ class MultiAgent:
         for i in range(1000):
             i += 1
 
-        raydat = self.data.get(u'LineOfSight', False)
+        raydat = self.data[u'LineOfSight']
 
         if u'inventoriesAvailable' in self.data:
             if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \

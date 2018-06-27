@@ -11,11 +11,13 @@ class ReplenishTask(Task):
         for i in range(1000):
             i += 1
 
-        inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")  # eat melons
+        inventory = agent.GetInventory("inventory")  # eat melons
 
         if (not task.GotMelons) and agent.MoveLookAtBlock(agent.chest_location):  # get melons
             if agent.GetAmountOfType(inventory, "melon") == 0:
-                task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
+                for inv in agent.data[u'inventoriesAvailable']:
+                    if inv[u'name'] == "chest":
+                        task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
             else:
                 task.GotMelons = True
         elif task.GotMelons:
@@ -30,6 +32,8 @@ class ReplenishTask(Task):
                     agent.SendCommand("use 0")
                     task.doneEating = True
                 else:
+                    if agent.GetAmountOfType(inventory, "melon") == 0:
+                        return True
                     agent.SendCommand("use 1")
 
             if task.doneEating and agent.MoveLookAtBlock(agent.chest_location):

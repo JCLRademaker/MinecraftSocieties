@@ -20,11 +20,11 @@ server.StartServer(agents)
 # ==============================================================================
 # ========================= Implementing the Server ============================
 # ==============================================================================
-server.agents[1].SendMessage("Hoi", target="Jan")
+# server.agents[1].SendMessage("Hoi", target="Jan")
 
 while server.IsRunning():
     success, obser = server.Observe()       # Call all Agent.Observe for init
-    chats = server.GetChat()                # Call all Agent.GetChat
+    # chats = server.GetChat()                # Call all Agent.GetChat
 
     if success:
         for agent in server.agents:
@@ -45,10 +45,10 @@ while server.IsRunning():
 
                 agent.SetPreferencesFromVote(priority)
 
-        for i, chat in enumerate(chats):
-            if chat[0]:
-                for msg in chat[1]:
-                    print(str(msg))
+        # for i, chat in enumerate(chats):
+        #     if chat[0]:
+        #         for msg in chat[1]:
+        #             print(str(msg))
 
     # Give agent time to process
     time.sleep(0.1)

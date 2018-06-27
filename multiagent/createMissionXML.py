@@ -26,7 +26,7 @@ def MakeDrawingDecorator():
                          '" x2="' + str(20) + '" y2="' + str(70) + '" z2="' + str(20) + '"' + ' type="' + block_type + \
                          '"' + '/>'
     # Mountain.
-    block_type = "stone"
+    block_type = "cobblestone"
     drawing_decorator += '<DrawSphere x="' + str(-50) + '" y="' + str(60) + '" z="' + str(50) + \
                          '" radius="' + str(20) + '"' + ' type="' + block_type + '"' + '/>'
     # Chest.

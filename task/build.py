@@ -56,13 +56,15 @@ class BuildTask(Task):
         for i in range(1000):
             i += 1
 
-        inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")  # get wood
+        inventory = agent.GetInventory("inventory")  # get wood
 
         if u'inventoriesAvailable' in agent.data:
             if not task.GotWood and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
                                      agent.MoveLookAtBlock(agent.chest_location)):
                 if agent.GetAmountOfType(inventory, "log") == 0:
-                    task.GotWood = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "log", 1)
+                    for inv in agent.data[u'inventoriesAvailable']:
+                        if inv[u'name'] == "chest":
+                            task.GotWood = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "log", 1)
 
         if task.GotWood:
             for item in inventory:
