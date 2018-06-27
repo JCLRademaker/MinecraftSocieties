@@ -65,9 +65,8 @@ class BuildTask(Task):
                     task.GotWood = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "log", 1)
 
         if task.GotWood:
-            agent.SendCommand("craft planks")
             for item in inventory:
-                if item.type == "planks":
+                if item.type == "log":
                     itemIndex = item.index + 1
                     agent.SendCommand("hotbar." + str(itemIndex) + " 1")
                     agent.SendCommand("hotbar." + str(itemIndex) + " 0")
@@ -87,6 +86,8 @@ class BuildTask(Task):
             else:
                 task.inrange = agent.MoveToLocation(location, 0.2)
             return False
+
+        return False
 
 
 

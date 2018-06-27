@@ -19,8 +19,8 @@ class HandInTask(Task):
                     agent.SendCommand("setPitch 0")
 
                     # Update resources for reasoning
-                    agent.melons = agent.GetAmountOfType(inventory, "melon") + agent.GetAmountOfType(chest, "melon")
-                    agent.wood = agent.GetAmountOfType(inventory, "wood") + agent.GetAmountOfType(chest, "wood")
+                    agent.melons_in_chest = agent.GetAmountOfType(chest, "melon")
+                    agent.wood_in_chest = agent.GetAmountOfType(chest, "wood")
                     return True
         return False
 

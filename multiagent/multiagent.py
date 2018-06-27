@@ -79,12 +79,12 @@ class MultiAgent:
         # Thresholds for determining preferences (can be changed, just initial numbers here)
         self.hpThreshold = 15
         self.hungerThreshold = 15
-        self.mineThreshold = 4  # Processed materials like planks (so not logs)
+        self.mineThreshold = 14  # Processed materials like planks (so not logs)
         self.foodThreshold = 8
         self.scoutThreshold = 2
 
-        self.melons = 0
-        self.wood = 0
+        self.melons_in_chest = 0
+        self.wood_in_chest = 0
 
     def StartMission(self, clientPool):
         """ """
@@ -291,28 +291,19 @@ class MultiAgent:
         hunger = int(self.data[u'Food'])
         health = self.data[u'Life']
         cobblestones = self.GetAmountOfType(inv, "cobblestone")
-        if self.melons == 0:
-            self.melons = self.GetAmountOfType(inv, "melon")
-
-        if self.wood == 0:
-            self.wood = self.GetAmountOfType(inv, "log")
-        
-        # Only add chest items if agent is in range of chest
-        # if len(chest) > 0:
-        #     melons += self.GetAmountOfType(chest, "melon")
-        #     logs += self.GetAmountOfType(chest, "log")
-        #     cobblestones += self.GetAmountOfType(chest, "cobblestone")
+        melons = self.melons_in_chest + self.GetAmountOfType(inv, "melon")
+        logs = self.wood_in_chest + self.GetAmountOfType(inv, "log")
         
         # HP/Hunger
         if health < self.hpThreshold or hunger < self.hungerThreshold:
             self.Preference.append("replenish")
 
         # Food gathering
-        if self.melons < self.foodThreshold:
+        if melons < self.foodThreshold:
             self.Preference.append("gather")
 
         # Mining
-        if self.wood + cobblestones < self.mineThreshold:
+        if logs + cobblestones < self.mineThreshold:
             self.Preference.append("mine")
 
         # Scouting
