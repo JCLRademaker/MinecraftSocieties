@@ -14,6 +14,7 @@ class HandInTask(Task):
 
                 for inv in agent.data[u'inventoriesAvailable']:
                     if inv[u'name'] == "chest":
+                        agent.SendCommand("setPitch 0")
                         # Adds items of a specified type to the chest
                         if agent.AddItemsToChest(agent.data[u'inventory'], "chest", task.r):
                             # chest = agent.GetInventory("chest")
