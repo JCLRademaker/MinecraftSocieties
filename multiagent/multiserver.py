@@ -1,4 +1,5 @@
 from __future__ import print_function
+from threading import Timer
 
 from multiagent import MultiAgent
 
@@ -10,9 +11,13 @@ import time
 
 class MultiServer:
     def __init__(self, xml):
+        self.timer = 0
+        self.start_time = 0
         self.agents = []
         self.clientPool = MalmoPython.ClientPool()
         self.missionXML = xml
+
+
 
     def StartServer(self, names, ip = '127.0.0.1'):
         """
@@ -59,6 +64,14 @@ class MultiServer:
         # Set initial world things - the initial agent will just poison everyone
         agent_hosts[0].SendCommand('chat /gamemode survival')
         agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 4 200')
+
+        def Timeout():
+            agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 1 20')
+            self.timer = Timer(30, Timeout)
+            self.timer.start()
+
+        self.timer = Timer(30, Timeout)
+        self.timer.start()
 
         print()
         print("Mission has started.")

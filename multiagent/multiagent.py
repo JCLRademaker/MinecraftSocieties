@@ -363,6 +363,11 @@ class MultiAgent:
             self.SendMessage("I'm scouting")
             self.addTask(scout.ScoutTask(self, self.InformationCount()+10))
 
+        for i in range(1000):
+            i += 1
+
+        self.SendCommand("setPitch 0")
+
 # ==============================================================================
 # ============================= Resource Gathering =============================
 # ==============================================================================
