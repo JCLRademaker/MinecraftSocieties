@@ -4,6 +4,7 @@ from collections import namedtuple
 from multiagent import multiserver, createMissionXML
 from task import build, scout, collect, gather, handIn
 import time
+import random
 import tasks
 import MalmoPython
 
@@ -29,8 +30,19 @@ while server.IsRunning():
         for agent in server.agents:
             # Reason about a new thing to do (if returns false)
             if not agent.doCurrentTask():
+                two_priorities = []
                 scores = server.ReasonOnPreferences()
+
+                # Tie breaking
                 priority = max(scores.iteritems(), key=operator.itemgetter(1))[0]
+                del scores[priority]
+                priority_2 = max(scores.iteritems(), key=operator.itemgetter(1))[0]
+
+                # Random of first two choices (prevents getting stuck gathering when adjusting thresholds)
+                two_priorities.append(priority)
+                two_priorities.append(priority_2)
+                priority = two_priorities.__getitem__(random.randint(0, len(two_priorities)-1))
+
                 agent.SetPreferencesFromVote(priority)
 
         for i, chat in enumerate(chats):

@@ -6,16 +6,21 @@ class HandInTask(Task):
         self.r = resource
 
     def Execute(task, agent):
-        chests = agent.block_list["chest"]
-        chestLocation = (chests[0][0] + 0.5, 60, chests[0][1] + 0.5)
         raydat = agent.data.get(u'LineOfSight', False)
 
         if u'inventoriesAvailable' in agent.data:
-            if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or agent.MoveLookAtBlock(chestLocation):
-                agent.SendCommand("move 0")
+            if (raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or \
+                    agent.MoveLookAtBlock(agent.chest_location):
                 # Adds items of a specified type to the chest
                 if agent.AddItemsToChest(agent.data[u'inventory'], "chest", task.r):
+                    inventory = agent.GetInventory(agent.data[u'inventory'], "inventory")
+                    chest = agent.GetInventory(agent.data[u'inventory'], "chest")
+                    agent.SendCommand("move 0")
                     agent.SendCommand("setPitch 0")
+
+                    # Update resources for reasoning
+                    agent.melons = agent.GetAmountOfType(inventory, "melon") + agent.GetAmountOfType(chest, "melon")
+                    agent.wood = agent.GetAmountOfType(inventory, "wood") + agent.GetAmountOfType(chest, "wood")
                     return True
         return False
 

@@ -108,7 +108,6 @@ class MultiServer:
                     scores[pref] += priority
                 priority -= 1
 
-        # Sort based on Borda scores
         return scores
 
     def GetChat(self):
