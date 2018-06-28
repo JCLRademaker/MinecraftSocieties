@@ -5,6 +5,7 @@ from collections import namedtuple
 InventoryObject = namedtuple('InventoryObject', 'type, colour, variant, quantity, inventory, index')
 InventoryObject.__new__.__defaults__ = ("", "", "", 0, "", 0)
 
+
 class GatherTask(Task):
     def __init__(self, agent, resource):
         Task.__init__(self, agent)
@@ -28,9 +29,11 @@ class GatherTask(Task):
             agent.SendCommand("attack 1")
             agent.SendCommand("yaw 0")
             agent.SendCommand("pitch 0")
-        elif task.reachedResource and raydat and raydat[u'type'] == task.r and raydat["hitType"] == "block" :   # if we reached the tree attack
+        # if we reached the tree attack
+        elif task.reachedResource and raydat and raydat[u'type'] == task.r and raydat["hitType"] == "block" :
             agent.SendCommand("attack 1")
-        elif task.reachedResource and raydat and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):   # if the tree is gone stop
+        # if the tree is gone stop
+        elif task.reachedResource and raydat and (not raydat[u'type'] == task.r or raydat["hitType"] == "entity"):
             agent.SendCommand("attack 0")
             agent.SendCommand("setPitch 0")
             del agent.block_list[task.r][0]

@@ -1,5 +1,6 @@
 from task import Task
 
+
 class HandInTask(Task):
     def __init__(self, agent, resource):
         Task.__init__(self, agent)

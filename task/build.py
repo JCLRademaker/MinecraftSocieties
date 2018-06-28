@@ -1,5 +1,7 @@
 from task import Task
 
+
+# SEE BUILD_TASK_V4 FOR THE MOST RECENT VERSION OF BUILDING!!!!!!
 class BuildTask(Task):
     def __init__(self, agent, location):
         Task.__init__(self, agent)
@@ -50,7 +52,8 @@ class BuildTask(Task):
             ]
         return grid
 
-    # Not implemented well enough to show
+    # SEE BUILD_TASK_V4 FOR THE MOST RECENT VERSION OF BUILDING!!!!!!
+    # Not implemented well enough to show in the demo
     # Returning true to prevent soft-locking the agent
     def Execute(task, agent):
         return True
@@ -93,8 +96,6 @@ class BuildTask(Task):
         #     return False
         #
         # return False
-
-
 
 # x
 # [[+-][+0][++]]

@@ -53,6 +53,6 @@ def GetMissingElements(inventory, recipe_name):
         amount = inv.GetAmountOfType(inventory, element[0])
         if amount < element[1]:
             missing_items.append((element[0], element[1]-amount))
-
-    print("The following items are missing: " + str(missing_items))
+            
+    # print("The following items are missing: " + str(missing_items))
     return missing_items

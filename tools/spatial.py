@@ -1,15 +1,16 @@
 import math
 
+
 def dist(a, b):
     """ Pythagoras """
     return math.sqrt(a*a + b*b)
+
 
 def OneNorm(a, b):
     """ Returns the distance between two numbers """
     mi = min(a,b)
     ma = max(a,b)
     return ma - mi
-
 
 
 def LocationFromIndex(agent, index):
@@ -22,6 +23,7 @@ def LocationFromIndex(agent, index):
     row = gridC - (index-1) % float(13)
 
     return (agent[0] - row , agent[1], agent[2] - col)
+
 
 def IndexFromLocation(agent, location):
     x = location[0]
@@ -41,6 +43,7 @@ def IndexFromLocation(agent, location):
     # Each column is worth 13 rows
     index = 13 * col + row
     return index
+
 
 def IndexFromDifference(diff):
     row = diff[0] + 6

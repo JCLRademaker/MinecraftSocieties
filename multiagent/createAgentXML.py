@@ -1,9 +1,4 @@
-def CreateAgentXML(name, coords = "", inventory = ""):
-    #if coords == "":
-     #   placement = '''<Placement x="0" y="61" z="0" pitch="0" yaw="0"/>'''
-    #else:
-     #   placement = '''<Placement x="'''+ str(coords[0])+ '''" y="'''+ str(coords[1])+ '''" z="'''+ str(coords[2])+ '''" pitch="0" yaw="0"/>'''
-
+def CreateAgentXML(name, coords="", inventory=""):
     xml = '''<AgentSection mode="Survival">
                      <Name>''' + name + '''</Name>
                      <AgentStart>

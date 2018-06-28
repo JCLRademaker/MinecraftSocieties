@@ -72,6 +72,7 @@ class ChatClient:
 
         return msg
 
+
 class ChatObject:
     def __init__(self, message, sender = "", priority = 2):
         self.sender = sender
@@ -89,6 +90,7 @@ class Deny:
             self.message = "negative"
         else:
             self.message = "negative, because " + reason
+
 
 negative = Deny()
 confirm = ChatObject("affirmative")

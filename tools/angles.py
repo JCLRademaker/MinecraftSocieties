@@ -1,5 +1,6 @@
 import math
 
+
 def CalcDAngle(dA, dB, maxAngle, curAngle):
     dangle = math.atan2(dA, dB) * float(180/math.pi)
     dangle -= curAngle
@@ -11,11 +12,13 @@ def CalcDAngle(dA, dB, maxAngle, curAngle):
 
     return dangle
 
+
 def CalcTargetPitch(agent, location):
     dx = max(abs(location[0] - agent[0]), 0.01)
     dy = max(abs(location[1] - (agent[1] + 1.5)), 0.01)
 
     return math.atan2(dy, dx) * float(180/math.pi)
+
 
 def CalcDeltaPitch(agent, location):
     """
@@ -24,14 +27,9 @@ def CalcDeltaPitch(agent, location):
 
     dx = max(abs(location[0] - agent[0]), 1)
     dy = max(abs(location[1] - (agent[1] + 1.5)), 1)
-     # Magic numbers: the 1.5 is the height of the face
+    # Magic numbers: the 1.5 is the height of the face
 
     return CalcTargetPitch(agent, location) - agent[4]
-
-    deltaPitch = CalcDAngle(dy, dx, 90, agent[4])
-
-    return deltaPitch
-
 
 
 def CalcDeltaYaw(agent, location):

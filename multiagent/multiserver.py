@@ -1,11 +1,8 @@
 from __future__ import print_function
 from threading import Timer
-
 from multiagent import MultiAgent
-
 import MalmoPython
 import malmoutils
-
 import time
 
 
@@ -65,6 +62,7 @@ class MultiServer:
         agent_hosts[0].SendCommand('chat /gamemode survival')
         agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 4 200')
 
+        # Poison the agents each 20 seconds (used to decrease hunger)
         def Timeout():
             agent_hosts[0].SendCommand('chat /effect @a minecraft:hunger 1 20')
             self.timer = Timer(20, Timeout)

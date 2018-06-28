@@ -534,7 +534,7 @@ class MultiAgent:
 
         # Save the used maps back to where they came from
         for map_key in maps:
-            maps[map_key][1].save("map{}{}.png".format(int(map_key[0]),int(map_key[1])))
+            maps[map_key][1].save("maps/map{}{}.png".format(int(map_key[0]),int(map_key[1])))
 
 
     def UpdateMapEfficient(self, worldmap):
@@ -550,7 +550,7 @@ class MultiAgent:
             block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
             map_key = (int(block_position[0] // 100), int(block_position[1] // 100))
             try:
-                map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
+                map = Image.open("maps/map{}{}.png".format(map_key[0], map_key[1]))
             except IOError:
                 map = Image.new("RGB", (100, 100), "black")
             maps[map_key] = (map.load(), map)
@@ -568,7 +568,7 @@ class MultiAgent:
 
         # Save the used maps back to where they came from
         for map_key in maps:
-            maps[map_key][1].save("map{}{}.png".format(int(map_key[0]), int(map_key[1])))
+            maps[map_key][1].save("maps/map{}{}.png".format(int(map_key[0]), int(map_key[1])))
 
 
     def UpdateMapBlock(self, block_value, block_position, maps):
@@ -590,7 +590,7 @@ class MultiAgent:
         # Returns the type of block at that location, or False if the location has not yet been scouted.
         map_key = (int(coordinates[0] // 100), int(coordinates[2] // 100))
         try:
-            map = Image.open("map{}{}.png".format(map_key[0], map_key[1]))
+            map = Image.open("maps/map{}{}.png".format(map_key[0], map_key[1]))
         except IOError:
             return False
         pixels = map.load()

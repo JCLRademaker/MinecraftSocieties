@@ -1,8 +1,4 @@
-from tools import angles, spatial, inventory
-
-# Regex fix:
-# self\.[bqwertyuiopsdfghjklzxcvbnm]
-# self.
+from tools import angles, spatial
 
 class Movement:
     def __init__(self, agent):
@@ -25,8 +21,6 @@ class Movement:
         if self.yawd and not self.pitd:
             if self.TryPitchTo(location, maxAngle = maxangle):
                 return True
-
-
 
     def MoveToLocation(self, targetLocation, distance = 0):
         # Reset movement every step
@@ -124,7 +118,6 @@ class Movement:
         sp = angles.CalcTargetPitch(self.agent.Position, targetLocation)
         self.SendCommand("setPitch " + str(sp))
         return True
-
 
     def TryPitchTo(self, targetLocation, maxAngle = 5):
         """ Makes the agent turn and look at a location """

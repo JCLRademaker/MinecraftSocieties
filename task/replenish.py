@@ -1,6 +1,6 @@
 from task import Task
 import gather, collect, handIn, scout
-from collections import namedtuple
+
 
 class ReplenishTask(Task):
     def __init__(self, agent):
@@ -13,10 +13,10 @@ class ReplenishTask(Task):
         for i in range(1000):
             i += 1
 
-        inventory = agent.GetInventory("inventory")  # eat melons
+        inventory = agent.GetInventory("inventory")
 
         if (not task.GotMelons) and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
-            agent.MoveLookAtBlock(agent.chest_location)):  # get melons
+                                     agent.MoveLookAtBlock(agent.chest_location)):
             if agent.GetAmountOfType(inventory, "melon") == 0:
                 agent.SendCommand("pitch 0")
                 for inv in agent.data[u'inventoriesAvailable']:
@@ -24,7 +24,8 @@ class ReplenishTask(Task):
                         chest = agent.GetInventory("chest")
                         if agent.GetAmountOfType(chest, "melon") > 0:
                             task.GotMelons = agent.AddItemsToInv(agent.data[u'inventory'], "chest", "melon", 1)
-                        else:   # Gather resources
+                        # Gather resources
+                        else:
                             resourceKBCount = 0
                             if u'melon_block' in agent.block_list:
                                 resourceKBCount = len(agent.block_list[u'melon_block'])
@@ -33,13 +34,16 @@ class ReplenishTask(Task):
                                 agent.addTask(collect.CollectTask(agent, "melon"))
                                 agent.addTask(handIn.HandInTask(agent, "melon"))
                                 agent.SendMessage("No melons in the inventory! Going to gather melons.")
-                            else:  # We need to scout for the resource
+                            # We need to scout for the resource
+                            else:
                                 agent.SendMessage("No melons in my observation data! I am going to scout.")
                                 agent.addTask(scout.ScoutTask(agent, agent.InformationCount() + 10))
                             agent.SendCommand("setPitch 0")
                             return True
-            else:   # There is already something in the inventory
+            # There is already something in the inventory
+            else:
                 task.GotMelons = True
+        # Select the melons in the hotbar and start munching
         elif task.GotMelons:
             if not task.doneEating and agent.MoveLookAtBlock(agent.home):
                 for item in inventory:
@@ -55,7 +59,7 @@ class ReplenishTask(Task):
                     if agent.GetAmountOfType(inventory, "melon") == 0:
                         return True
                     agent.SendCommand("use 1")
-
+            # Put the melons back in the chest
             if task.doneEating and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
                                     agent.MoveLookAtBlock(agent.chest_location)):
                 agent.SendCommand("pitch 0")

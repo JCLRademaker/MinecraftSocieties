@@ -6,8 +6,8 @@ def MakeDrawingDecorator():
     # Chest is always hardcoded.
     chest_x = 3
     chest_z = 4
-    block_type = "sand"
 
+    block_type = "sand"
     drawing_decorator = "<DrawingDecorator>"
     # Place sand to avoid cluttering of spawning area with e.g. trees/grass.
     drawing_decorator += '<DrawCuboid x1="' + str(-20) + '" y1="' + str(59) + '" z1="' + str(-10) + \
