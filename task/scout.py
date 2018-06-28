@@ -30,11 +30,11 @@ class ScoutTask(Task):
                 task.counter+=1
                 if task.counter == 1:
                     agent.UpdateMapFull(blocks)
-                    task.target = (0, 61, 0) # TODO: Make equal to agent starting position
+                    task.target = (0, 61, 0)
 
 
             #Select a scouting destination, then move there:
-            radius = 100
+            radius = 16
             min_score = 10**5
             while task.target_reached:
                 old_target = task.target
@@ -50,7 +50,7 @@ class ScoutTask(Task):
                             task.target_reached = False
                 radius += 6
             agent.MoveToLocation(task.target)
-            if task.dist(agent.Position, task.target) < 6:
+            if task.dist(agent.Position, task.target) < 3:
                 task.target_reached = True
 
     

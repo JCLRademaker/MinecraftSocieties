@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from builtins import range
+#from builtins import range
 from agent import Agent
 from random import randint, choice
 
@@ -67,7 +67,7 @@ while agent.is_mission_running:
 
 
         #Select a scouting destination, then move there:
-        radius = 10
+        radius = 16
         min_score = 10**5
         while target_reached:
             old_target = target
@@ -83,7 +83,7 @@ while agent.is_mission_running:
                         target_reached = False
             radius += 6
         agent.MoveLookAtBlock(target)
-        if dist(agent.Position, target) < 6:
+        if dist(agent.Position, target) < 3:
             target_reached = True
             # for map_key in agent.big_map:
             #     print("New small map", map_key)
