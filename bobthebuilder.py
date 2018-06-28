@@ -1,22 +1,10 @@
 from __future__ import print_function
-
 from tools import spatial
 from task import build
-
 from builtins import range
-import MalmoPython
-import os
-import sys
-import time
-import random
-import json
-import errno
-import math
 import malmoutils
-
-from collections import namedtuple
-
 from multiagent import multiserver, createAgentXML
+
 
 malmoutils.fix_print()
 
@@ -24,9 +12,7 @@ invent =  '''<InventoryItem slot="1" type="iron_axe"/>
           <InventoryItem slot="2" type="iron_pickaxe"/>
           <InventoryItem slot="3" type="log" quantity="64"/>'''
 
-logX = -2
-logZ = -1
- # -- set up the mission --
+# -- set up the mission --
 xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <About>
@@ -44,8 +30,7 @@ xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
       <ServerQuitFromTimeUp description="" timeLimitMs="35000"/>
       <ServerQuitWhenAnyAgentFinishes description=""/>
     </ServerHandlers>
-  </ServerSection>'''+ createAgentXML.CreateAgentXML("Walker", inventory = invent, coords = (0, 227, 0)) + '''
-
+  </ServerSection>''' + createAgentXML.CreateAgentXML("Walker", inventory=invent, coords=(0, 227, 0)) + '''
 </Mission>'''
 
 # ==============================================================================
@@ -80,6 +65,7 @@ def CGetGrid(x,y,z, size=1):
 
     return gr
 
+
 def GetGrid(x, y, z, size=1):
     c1 = spatial.IndexFromDifference((-size, 0, -size))
     c2 = spatial.IndexFromDifference((-size, 0,  size))
@@ -87,19 +73,14 @@ def GetGrid(x, y, z, size=1):
     c4 = spatial.IndexFromDifference(( size, 0,  -size))
     gr = [c1, c2, c3, c4]
 
-    #for dx in range(-size, size+1):
+    # for dx in range(-size, size+1):
     #    for dz in range(-size, size+1):
     #        ind = spatial.IndexFromDifference((dx,0,dz))-1
     #        gr.append(ind)
     return gr
 
-
-
-
 grid = CGetGrid(0,226, 0)
 grid = [(-2, 226, -1),(-2, 226, 0), (-2, 226, 1),(-2, 227, -1),(-2, 227, 0), (-2, 227, 1)]
-# print(grid)
-
 
 server.agents[0].SendCommand("hotbar.4 1")
 server.agents[0].SendCommand("hotbar.4 0")
@@ -116,12 +97,9 @@ while server.IsRunning():
         if b.Execute(server.agents[0]):
             print("Done")
             break
-
-
         continue
         pos = server.agents[0].Position
         print(tmo.CalcBuildingBlocks(pos))
-
 
         # Bare bones, place a block on all blocks in the grid
         for i, l in enumerate(grid):

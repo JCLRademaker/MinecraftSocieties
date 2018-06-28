@@ -60,9 +60,12 @@ class ReplenishTask(Task):
                         return True
                     agent.SendCommand("use 1")
             # Put the melons back in the chest
+            # A lot of checks to make sure the agent actually registers the chest
             if task.doneEating and ((raydat and raydat[u'type'] == "chest" and raydat["inRange"]) or
                                     agent.MoveLookAtBlock(agent.chest_location)):
-                agent.SendCommand("pitch 0")
-                agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
-                agent.SendCommand("setPitch 0")
-                return True
+                for inv in agent.data[u'inventoriesAvailable']:
+                    if inv[u'name'] == "chest":
+                        agent.SendCommand("pitch 0")
+                        agent.AddItemsToChest(agent.data[u'inventory'], "chest", "melon")
+                        agent.SendCommand("setPitch 0")
+                        return True

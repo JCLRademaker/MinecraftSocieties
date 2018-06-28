@@ -23,6 +23,7 @@ import os
 import sys
 import errno
 
+
 def fix_print():
     # We want to flush the print output immediately, so that we can view test output as it happens.
     # The way to do this changed completely between Python 2 and 3, with the result that setting this
@@ -56,6 +57,7 @@ def parse_command_line(agent_host):
 def get_video_xml(agent_host):
     return '<VideoProducer><Width>860</Width><Height>480</Height></VideoProducer>' if agent_host.receivedArgument("record_video") else ''
 
+
 def get_default_recording_object(agent_host, filename):
     # Convenience method for setting up a recording object - assuming the recording_dir and record_video
     # flags were passed in as command line arguments (see parse_command_line above).
@@ -70,6 +72,7 @@ def get_default_recording_object(agent_host, filename):
         if agent_host.receivedArgument("record_video"):
             my_mission_record.recordMP4(24,2000000)
     return my_mission_record
+
 
 def get_recordings_directory(agent_host):
     # Check the dir passed in:

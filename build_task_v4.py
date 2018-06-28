@@ -1,19 +1,13 @@
 from __future__ import print_function
 from __future__ import division
-
 from builtins import range
 from builtins import object
 from past.utils import old_div
 import MalmoPython
-import os
 import random
-import sys
 import time
 import json
-import copy
-import errno
 import math
-import xml.etree.ElementTree
 import malmoutils
 
 malmoutils.fix_print()
@@ -32,6 +26,7 @@ SIZE_Z = 3
 
 # pallettes for the structure etc
 pallette = ["log", "air", "mycelium","glowstone","netherrack","slime"]
+
 
 def MakeDrawingDecorator():
     # Chest is always hardcoded.
@@ -75,6 +70,7 @@ def ReturnMobTypes():
     mobs = (''' Bat ''' + ''' Chicken ''' + ''' Cow ''' + ''' Donkey ''' + ''' Horse ''' + ''' Mule '''
             + ''' Pig ''' + ''' Rabbit ''' + ''' Sheep ''' + ''' Llama ''' + ''' Wolf ''')
     return mobs
+
 
 def getMissionXML():
     # Draw a structure directly in front of the player.
@@ -249,8 +245,8 @@ class CopyAgent(object):
 
         #self.targets2.append((0,0))
 
-#===================================================================
-#here we define the desired structure
+# ===================================================================
+# here we define the desired structure
     def init_scan(self, ah, ob):
         self.current_target = 11
         self.world = {u'log',u'log',u'log',u'log',u'log',u'log',u'log', u'log'}
@@ -259,8 +255,7 @@ class CopyAgent(object):
         self.world2 = {u'log',u'log',u'log',u'log',u'log',u'log',u'log', u'log'}
         self.replay_mask2 = [1, 1, 1, 1, -1, 1, 1, -1, 1, 1]
         return True
-
-#====================================================================
+# ====================================================================
 
 
     def init_copy(self, ah, ob):
@@ -280,7 +275,7 @@ class CopyAgent(object):
             agent_host.sendCommand("hotbar." + str(hotkey) + " 1")  # press
             agent_host.sendCommand("hotbar." + str(hotkey) + " 0")  # release
 
-        #sproceed = True if hotkey < 0 else False # Skip this position if there's nothing to place there.
+        # sproceed = True if hotkey < 0 else False # Skip this position if there's nothing to place there.
         if hotkey < 0:
            proceed = True
         else:
@@ -350,8 +345,6 @@ class CopyAgent(object):
                 return True
         return False
 
-
-
 #        proceed = True if hotkey < 0 else False # Skip this position if there's nothing to place there.
 #        if not proceed and self.pointTo(ah, ob, target_pitch, target_yaw, self.replay_accuracy):
 #            if TESTING:
@@ -370,7 +363,6 @@ class CopyAgent(object):
 #                return True
 #        return False
 
-
     def wait(self, ah, ob):
         return False    # Do nothing - only get here if we failed to complete the build.
 
@@ -379,7 +371,7 @@ class CopyAgent(object):
     def act(self, ah, ob):
         if CopyAgent.behaviour[self.mode](self, ah, ob):
             self.mode += 1
-        
+
 
 # Create a bunch of build battle missions and run an agent on them.
 num_iterations = 30000
@@ -422,7 +414,6 @@ for i in range(num_iterations):
         world_state = agent_host.getWorldState()
     print()
 
-
     # Mission loop:
     while world_state.is_mission_running:
        
@@ -432,8 +423,5 @@ for i in range(num_iterations):
             agent.act(agent_host, ob)
         world_state = agent_host.getWorldState()
 
-  
-
-    
     print()
 

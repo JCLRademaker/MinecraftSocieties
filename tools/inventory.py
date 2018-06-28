@@ -70,30 +70,3 @@ def FindSlotsInUse(inventory, inventory_name):
     if type(slots_in_use) is not list:
         slots_in_use = [slots_in_use]
     return slots_in_use
-
-# CURRENTLY NOT IN USE
-# Use Malmo's combine option if it's possible
-# def CombineSlotWithAgent(from_slot, to_slot, item_slots, o_inv_slots, o_inv_name):
-#     # Update item amount chest (other inventory)
-#     other_inv_amount = max(min(from_slot[1] + to_slot[1], 64), 0)
-#     o_inv_slots[o_inv_slots.index(to_slot)] = (to_slot[0], other_inv_amount)
-#     # Update item amount agent inventory
-#     item_amount = (0, (from_slot[1] + to_slot[1]) - 64)[from_slot[1] + to_slot[1] > 64]
-#     item_slots[item_slots.index(from_slot)] = (from_slot[0], item_amount)
-#
-#     return "combineInventoryItems " + o_inv_name + ":" + str(to_slot[0]) + " inventory:" + str(from_slot[0]), \
-#            item_slots, o_inv_slots
-
-# CURRENTLY NOT IN USE
-# Use Malmo's swap option if it's possible
-# def SwapSlotsWithAgent(indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot):
-#     print(indices_used)
-#     for x in range(o_inv_size):
-#         if x not in indices_used:
-#             indices_used.append(x)
-#             o_inv_slots.append((x, from_slot[1]))
-#             # It's swapped/zero, so not applicable anymore
-#             item_slots[next(item_slots.index(x) for x in item_slots if x[0] == from_slot[0])] = (from_slot[0], 0)
-#             return "swapInventoryItems inventory:" + str(from_slot[0]) + " " + o_inv_name + ":" + str(x), \
-#                    indices_used, item_slots, o_inv_slots
-#     return "", indices_used, item_slots, o_inv_slots

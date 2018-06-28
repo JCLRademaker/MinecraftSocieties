@@ -1,11 +1,8 @@
 from __future__ import print_function
 import operator
-from collections import namedtuple
 from multiagent import multiserver, createMissionXML
-from task import build, scout, collect, gather, handIn
 import time
 import random
-import tasks
 import MalmoPython
 
 # ==============================================================================

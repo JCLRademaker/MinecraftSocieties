@@ -1,12 +1,9 @@
 from collections import namedtuple
-from tools import angles, spatial, inventory, crafting
+from tools import spatial, inventory, crafting
 from message import chat
 from task import build, scout, collect, gather, handIn, replenish
-import tasks
-
 import movement
 from PIL import Image
-
 import MalmoPython
 import time
 import json
@@ -61,7 +58,7 @@ class MultiAgent:
         # Movement
         self.mov = movement.Movement(self)
 
-        # ??????
+        # Scouting
         self.big_map = {}
         self.block_list = {}
         self.home = (0, 61, 0)  # TODO: Set dynamically at spawn
@@ -278,7 +275,6 @@ class MultiAgent:
 # ==============================================================================
 # ============================== Preferences ===================================
 # ==============================================================================
-
     def AdjustPreferences(self):
         raydat = self.data.get(u'LineOfSight', False)
         self.Preference = []
@@ -400,6 +396,9 @@ class MultiAgent:
     def GetItemFromChest(self, _inventory, item_type, stack_amount=1):
         return inventory.RetrieveItemOfType(_inventory, item_type, stack_amount)
 
+    # An important note is that the performance of this is based on computing power.
+    # It's easy for this process to get de-synced with the agent platform, which results in a failed observation
+    # of the chest's contents.
     def AddItemsToChest(self, super_inventory, o_inv_name, item_type, amount_stacks=None):
         raydat = self.data[u'LineOfSight']
 
@@ -453,6 +452,9 @@ class MultiAgent:
                 return True
         return False
 
+    # An important note is that the performance of this is based on computing power.
+    # It's easy for this process to get de-synced with the agent platform, which results in a failed observation
+    # of the chest's contents.
     def AddItemsToInv(self, super_inventory, chest_inv_name, item_type, amount_stacks=1):
         for i in range(1000):
             i += 1
@@ -507,7 +509,6 @@ class MultiAgent:
     # ==============================================================================
     # ============================ Maintaining a Map ===============================
     # ==============================================================================
-    
     def UpdateMapFull(self, worldmap):
         # Input: worldmap in the form of a 13x13 worldGrid as retrieved from agent.Observe
         # Update the big_map property to reflect the observed squares
@@ -573,7 +574,6 @@ class MultiAgent:
 
     def UpdateMapBlock(self, block_value, block_position, maps):
         map_key = (int(block_position[0] // 100), int(block_position[1] // 100))
-        #if maps[map_key][0][block_position[1] % 100, block_position[0] % 100] == (0, 0, 0):
         try:
             maps[map_key][0][block_position[1] % 100, block_position[0] % 100] = colourMapping[block_value]
         except KeyError:
@@ -648,36 +648,3 @@ class MultiAgent:
     """
     def addTask(self, task):
         self.taskList.append(task)
-
-    # ==============================================================================
-    # ============================ High level task wrappers ========================
-    # ==============================================================================
-    """
-    Adds all the subtasks for woodcutting to the agents tasklist
-    """
-    def addWoodcutterTask(self):
-        self.addTask((tasks.moveToResource, u'log'))
-        self.addTask((tasks.harvestResource, u'log'))
-        self.addTask((tasks.collectResource, "log"))
-        self.addTask((tasks.goToPosition, self.home))
-        self.addTask((tasks.returnItems, u'log'))
-
-    """
-    Adds all the subtasks for stonecutting to the agents tasklist
-    """
-    def addStonecutterTask(self):
-        self.addTask((tasks.moveToResource, u'stone'))
-        self.addTask((tasks.harvestResource, u'stone'))
-        self.addTask((tasks.collectResource, "cobblestone"))
-        self.addTask((tasks.goToPosition, self.home))
-        self.addTask((tasks.returnItems, u'cobblestone'))
-
-    """
-       Adds all the subtasks for gathering to the agents tasklist
-    """
-    def addGatheringTask(self):
-        self.addTask((tasks.moveToResource, u'melon_block'))
-        self.addTask((tasks.harvestResource, u'melon_block'))
-        self.addTask((tasks.collectResource, "melon"))
-        self.addTask((tasks.goToPosition, self.home))
-        self.addTask((tasks.returnItems, u'melon'))
