@@ -483,36 +483,6 @@ class MultiAgent:
                 return True
         return False
 
-    # CURRENTLY NOT IN USE -- MALMO??
-    # def CombineSlots(self, item_slots, o_inv_slots, o_inv_name):
-    #     # If there are slots left to COMBINE...
-    #     for slot in item_slots:
-    #         for item in o_inv_slots:
-    #             if item[1] < 64:
-    #                 # Update and keep track of the slots manually (sadly this has to be done because Malmo)
-    #                 command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-    #                     slot, item, item_slots, o_inv_slots, o_inv_name)
-    #                 self.SendCommand(command)
-    #     return item_slots, o_inv_slots
-    #
-    # def CombineSwapSlots(self, indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot, o_inv):
-    #     # Try to COMBINE with the last added slot of o_inv (making sure the last slot is also stacked to 64)
-    #     if len(o_inv_slots) > 0:
-    #         index = len(o_inv_slots) - 1
-    #         other_slot = o_inv_slots[index]
-    #         if o_inv_slots[index][1] < 64 and o_inv[other_slot[0]].type == from_slot[2]:
-    #             print("Ik ga type " + str(o_inv[other_slot[0]].type) + " combineren met " + str(from_slot[2]))
-    #             command, item_slots, o_inv_slots = inventory.CombineSlotWithAgent(
-    #                 from_slot, o_inv_slots[index], item_slots, o_inv_slots, o_inv_name)
-    #             self.SendCommand(command)
-    #     # SWAP items with EMPTY slot(s)
-    #     if next(x[1] for x in item_slots if x[0] == from_slot[0]) > 0:
-    #         command, indices_used, item_slots, o_inv_slots = inventory.SwapSlotsWithAgent(
-    #             indices_used, item_slots, o_inv_slots, o_inv_name, o_inv_size, from_slot)
-    #         if command != "":
-    #             self.SendCommand(command)
-    #     return item_slots, o_inv_slots
-
     # ==============================================================================
     # ================================ Crafting ====================================
     # ==============================================================================
@@ -550,7 +520,7 @@ class MultiAgent:
             block_position = (math.floor(self.Position[0]) - 6 + j, math.floor(self.Position[2]) - 6 + i)
             map_key = (block_position[0] // 100, block_position[1] // 100)
             try:
-                map = Image.open("map{}{}.png".format(map_key[0],map_key[1]))
+                map = Image.open("maps/map{}{}.png".format(map_key[0],map_key[1]))
             except IOError:
                 map = Image.new("RGB", (100,100), "black")
             maps[map_key] = (map.load(), map)
